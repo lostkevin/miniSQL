@@ -116,7 +116,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="B+Tree.h" />
+    <ClInclude Include="B+Tree_V2.h" />
     <ClInclude Include="Interpreter.h" />
   </ItemGroup>
   <ItemGroup>

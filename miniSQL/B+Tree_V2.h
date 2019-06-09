@@ -1,0 +1,376 @@
+#pragma once
+#pragma once
+#ifndef uint
+#define uint unsigned int
+#endif // !uint
+enum NodeType { LEAF, NONLEAF };
+template<typename _KTy, typename _DTy, uint _order>class BPlusNode;
+
+
+//每个Node包含key和ptr，若B+Node非叶，Node的ptr指向子节点，且子节点的max Key < Node.key
+//若B+Node为叶，除最后一个节点外，每个ptr均指向数据，最后一个ptr指向Rsibling
+//需要排序，重载operator <
+
+//需要支持的方法:search,insert,erase
+//不需要update方法
+template<typename _KTy, typename _DTy, int _order = 3>
+class BPlusTree {
+	typedef BPlusNode<_KTy, _DTy, _order> Node;
+	typedef Node* NodePtr;
+	typedef _DTy* DataPtr;
+	const int order = _order;
+	NodePtr root;
+
+public:
+	BPlusTree () {
+		root = nullptr;
+	}
+	void printData () {
+		NodePtr ptr = root;
+		if (!root)return;
+		while (ptr->Type == NONLEAF) {
+			ptr->printData ();
+			std::cout << std::endl << "=====next level======" << std::endl;
+			ptr = ptr->GetNodePointer (0);
+		}
+		ptr->printData ();
+	}
+	bool insert (_KTy key, DataPtr pData) {
+		NodePtr InsertedNode = Search (key);
+		if (!root) {
+			InsertedNode = root = new Node ();
+		}
+		if (InsertedNode->Insert (key, pData)) {
+			if (root->Parent) {
+				root = root->Parent; //至多上升一层
+			}
+			return true;
+		}
+		return false;
+	}
+
+	void erase (_KTy key) {
+		NodePtr ErasedNode = Search (key);
+		if (!root)return;
+		
+		ErasedNode->erase (key);
+		if (root->size == 1 && root->Type == NONLEAF) {
+			NodePtr tmp = root;
+			root = root->GetNodePointer (0);
+			root->Parent = nullptr;
+			free (tmp);
+		}
+		else if (!root->size) {
+			free (root);
+			root = nullptr;
+		}
+	}
+
+	DataPtr find (_KTy key) {
+		NodePtr ptr = root;
+		if (!root)return nullptr;
+		while (ptr->Type == NONLEAF) {
+			uint i = 0;
+			for (; i + 1 < ptr->size && key >= ptr->key[i]; i++);
+			ptr = ptr->GetNodePointer (i);
+		}
+		uint i = 0;
+		for (; i < ptr->size && key != ptr->key[i]; i++);
+		return i == ptr->size ? nullptr : ptr->GetDataPointer (i);
+	}
+	bool empty () {
+		return this->root == nullptr;
+	}
+private:
+	NodePtr Search (_KTy key) {
+		if (!root)return nullptr;
+		NodePtr ptr = root;
+		while (ptr->Type == NONLEAF) {
+			uint i = 0;
+			for (; i + 1 < ptr->size && key >= ptr->key[i]; i++);
+			ptr = ptr->GetNodePointer(i);
+		}
+		return ptr;
+	}
+};
+
+//为了避免不必要的麻烦，使用了数组作为内部索引存储
+//示意图
+//NONLEAF
+//Key1 < Key2 < Key3 < ... < KeyM - 1  maxPtr
+//	< Key1 < Key2 < Key3 ... < KeyM - 1 >= KeyM - 1
+//	LEAF
+//	Key1 < Key2 ... < KeyM
+//	= Key1 = Key2 ... = KeyM
+
+template<typename _KTy, typename _DTy, uint _order = 3u>
+class BPlusNode {
+public:
+	void* ptr[_order + 1];
+	_KTy key[_order + 1];
+	typedef _DTy* DataPtr;
+	typedef BPlusNode* NodePtr;
+	NodeType Type;
+	NodePtr Parent;
+	//这两个指针是为了便于范围查找及delete
+	NodePtr RLeaf;
+	NodePtr LLeaf;
+	uint size;
+	const uint order = _order;
+	BPlusNode () {
+		Type = LEAF;
+		Parent = nullptr;
+		size = 0; //指针的size
+		RLeaf = LLeaf = nullptr;
+		for (uint i = 0; i <= _order; i++) {
+			ptr[i] = nullptr; key[i] = _KTy ();
+		}
+	}
+	~BPlusNode () {
+		if (this->Type != LEAF) {
+			for (uint i = 0; i <= _order; i++)if(ptr[i])delete ptr[i];
+		}
+	}
+	DataPtr GetDataPointer (uint index) {
+		return (DataPtr)(index < size ? ptr[index] : nullptr);
+	}
+	NodePtr GetNodePointer (uint index) {
+		return (NodePtr)(index < size ? ptr[index] : nullptr);
+	}
+	
+	bool Insert (_KTy key, void* pData) {
+		//可以证明key>=this->key[0]
+		uint i = 0;
+		if (this->Type == LEAF) {
+			for (; i < this->size && key > this->key[i]; i++);
+			if (i == this->size) {
+				this->key[i] = key;
+				this->ptr[i] = pData;
+				this->size++;
+			}
+			else if (key == this->key[i])return false;
+			else {
+				for (int j = this->size; j > (int)i; j--) {
+					this->key[j] = this->key[j - 1];
+					this->ptr[j] = this->ptr[j - 1];
+				}
+				this->key[i] = key;
+				this->ptr[i] = pData;
+				this->size++;
+			}
+			if (this->size == order + 1) {
+				NodePtr newNode = new BPlusNode ();
+				newNode->Type = this->Type;
+				for (uint i = size / 2; i <= order; i++) {
+					newNode->ptr[newNode->size] = this->ptr[i];
+					this->ptr[i] = nullptr;
+					newNode->key[newNode->size] = this->key[i];
+					this->key[i] = _KTy ();
+					newNode->size++;
+				}
+				this->size /= 2;
+				newNode->Parent = Parent;
+				newNode->LLeaf = this;
+				newNode->RLeaf = RLeaf;
+				if (RLeaf)RLeaf->LLeaf = newNode;
+				RLeaf = newNode;
+				if (!Parent) {
+					newNode->Parent = Parent = new BPlusNode ();
+					Parent->Type = NONLEAF;
+					Parent->key[0] = newNode->key[0];
+					Parent->ptr[1] = newNode;
+					Parent->ptr[0] = this;
+					Parent->size = 2;
+					return true;
+				}
+				return Parent->Insert (newNode->key[0], newNode);
+			}
+			return true;
+		}
+		else {
+			for (; i + 1 < this->size && key >= this->key[i]; i++);
+			if (i + 1 == this->size) {
+				this->key[i] = key;
+				this->size++;
+				this->ptr[i + 1] = pData;
+			}
+			else {
+				for (int j = this->size; j > (int)i; j--) {
+					this->ptr[j] = this->ptr[j - 1];
+					this->key[j] = this->key[j - 1];
+				}
+				this->key[i] = key;
+				this->ptr[i + 1] = pData;
+				this->size++;
+			}
+			if (this->size == order + 1) {
+				NodePtr newNode = new BPlusNode ();
+				newNode->Type = this->Type;
+				for (uint i = size / 2; i <= order; i++) {
+					newNode->ptr[newNode->size] = this->ptr[i];
+					this->GetNodePointer (i)->Parent = newNode;
+					this->ptr[i] = nullptr;
+					newNode->key[newNode->size] = this->key[i];
+					this->key[i] = _KTy ();
+					newNode->size++;
+				}
+				this->size /= 2;
+				newNode->Parent = Parent;
+				newNode->LLeaf = this;
+				newNode->RLeaf = RLeaf;
+				if (RLeaf)RLeaf->LLeaf = newNode;
+				RLeaf = newNode;
+				if (!Parent) {
+					newNode->Parent = Parent = new BPlusNode ();
+					Parent->Type = NONLEAF;
+					Parent->key[0] = this->key[this->size - 1];
+					Parent->ptr[1] = newNode;
+					Parent->ptr[0] = this;
+					Parent->size = 2;
+					return true;
+				}
+				return Parent->Insert (this->key[this->size - 1], newNode);
+			}
+			return true;
+		}
+	}
+	void printData () {
+		uint size = this->size;
+		if (this->Type == NONLEAF)size--;
+		for (uint i = 0; i < size; i++)std::cout << this->key[i] << " ";
+		if (RLeaf) { 
+			std::cout << " | ";
+			RLeaf->printData ();
+		}
+	}
+
+	void updateKey (_KTy oldKey, _KTy newKey) {
+		for (uint i = 0; i < this->size; i++)
+			if (this->key[i] == oldKey) {
+				this->key[i] = newKey;
+				break;
+			}
+		if (this->Parent)this->Parent->updateKey (oldKey, newKey);
+	}
+
+	void erase (_KTy key) {
+		for (uint i = 0; i < this->size; i++) {
+			if (this->key[i] == key) {
+				for (uint j = i + 1; j < this->size; j++) {
+					this->key[j - 1] = this->key[j];
+					this->ptr[j - 1] = this->ptr[j];
+				}
+				this->size--;
+				if(this->Parent)this->Parent->updateKey (key, this->key[i]);
+				break;
+			}
+		}
+		//3 4 5 6 7
+		//1 1 2 2 3
+		if (this->size == (order - 1) / 2) {
+			if (LLeaf && LLeaf->Parent == this->Parent && LLeaf->size > (order - 1) / 2 + 1) {
+				//从左兄弟取一个节点过来，左兄弟的size>=2，因此左兄弟不用更新key
+				//但本节点需要再次update
+				for (uint j = this->size; j > 0; j--) {
+					this->key[j] = this->key[j - 1];
+					this->ptr[j] = this->ptr[j - 1];
+				}
+				
+				if (this->Type == LEAF) {
+					this->key[0] = LLeaf->key[LLeaf->size - 1];
+					this->ptr[0] = LLeaf->ptr[LLeaf->size - 1];
+					this->Parent->updateKey (this->key[1], this->key[0]);
+				}
+				else {
+					this->ptr[0] = LLeaf->ptr[LLeaf->size - 1];
+					LLeaf->GetNodePointer (LLeaf->size - 1)->Parent = this;
+					int i = 0;
+					for (; this->Parent->ptr[i] != this->LLeaf; i++);
+					this->key[0] = this->Parent->key[i];
+					this->Parent->updateKey (this->key[0], this->LLeaf->key[LLeaf->size - 2]);
+				}
+				LLeaf->size--;
+				this->size++;
+			}
+			//左节点分不出，看看右节点有没有
+			else if (RLeaf && RLeaf->Parent == this->Parent && RLeaf->size > (order - 1) / 2 + 1) {
+				//从右兄弟取一个节点过来，右兄弟需更新key
+				//本节点不用更新
+				if (this->Type == LEAF) {
+					this->key[this->size] = RLeaf->key[0];
+					this->ptr[this->size] = RLeaf->ptr[0];
+					this->Parent->updateKey (RLeaf->key[0], RLeaf->key[1]);
+				}
+				else {
+					this->ptr[this->size] = RLeaf->ptr[0];
+					RLeaf->GetNodePointer (0)->Parent = this;
+					int i = 0;
+					for (; this->Parent->ptr[i] != this; i++);
+					this->key[this->size - 1] = this->Parent->key[i];
+					this->Parent->updateKey (this->Parent->key[i], this->RLeaf->key[0]);
+				}
+				for (uint j = 1; j < RLeaf->size; j++) {
+					RLeaf->key[j - 1] = RLeaf->key[j];
+					RLeaf->ptr[j - 1] = RLeaf->ptr[j];
+				}
+				RLeaf->size--;
+				this->size++;
+			}
+			else {
+				_KTy nextKey;
+				//左右节点都没有,需要合并
+				if (LLeaf && LLeaf->Parent == this->Parent) {
+					uint i = 0;
+					for (; this->Parent->ptr[i] != LLeaf; i++);
+					nextKey = Parent->key[i];
+					//可以与左节点合并
+					for (int i = this->size; i >= 0; i--) {
+						this->key[i + LLeaf->size] = this->key[i];
+						this->ptr[i + LLeaf->size] = this->ptr[i];
+					}
+					for (uint i = 0; i < LLeaf->size; i++) {
+						this->ptr[i] = LLeaf->ptr[i];
+						this->key[i] = LLeaf->key[i];
+						if (this->Type == NONLEAF)LLeaf->GetNodePointer (i)->Parent = this;
+					}
+					if (this->Type == NONLEAF)this->key[LLeaf->size - 1] = nextKey;
+					this->size += LLeaf->size;
+					
+					//从链表中取出
+					if(this->LLeaf->LLeaf)this->LLeaf->LLeaf->RLeaf = this;
+					this->LLeaf = this->LLeaf->LLeaf;
+					
+				}
+				else if (RLeaf && RLeaf->Parent == this->Parent) {
+					uint i = 0;
+					for (; Parent->ptr[i] != this; i++);
+					nextKey = Parent->key[i];
+					//与右节点合并
+					for (int i = RLeaf->size; i >= 0; i--) {
+						RLeaf->key[i + this->size] = RLeaf->key[i];
+						RLeaf->ptr[i + this->size] = RLeaf->ptr[i];
+					}
+					for (uint i = 0; i < this->size; i++) {
+						RLeaf->ptr[i] = this->ptr[i];
+						RLeaf->key[i] = this->key[i];
+						if (this->Type == NONLEAF)this->GetNodePointer (i)->Parent = RLeaf;
+					}
+					if (this->Type == NONLEAF)RLeaf->key[this->size - 1] = nextKey;
+					RLeaf->size += this->size;
+
+					//从链表中取出
+					this->RLeaf->LLeaf = this->LLeaf;
+					if (this->LLeaf)this->LLeaf->RLeaf = this->RLeaf;
+				}
+				else {
+					//都不可以合并，说明该节点的父亲节点若存在，仅有一个儿子，这种情况仅出现在该节点为根
+					if (this->Parent)throw new std::exception ("This node is not a root!");
+					//根的修改需要交给外部完成，若this->size!=0,外部不需要做任何操作,否则释放内存并初始化root=nullptr
+					return;
+				}
+				//合并结束，删除父节点中的被合并节点
+				this->Parent->erase (nextKey);
+			}
+		}
+	}
+};

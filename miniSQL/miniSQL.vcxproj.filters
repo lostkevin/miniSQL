@@ -18,7 +18,7 @@
     <ClInclude Include="Interpreter.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="B+Tree.h">
+    <ClInclude Include="B+Tree_V2.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
