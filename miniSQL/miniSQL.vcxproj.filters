@@ -15,20 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Interpreter.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="B+Tree_V2.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="Interpreter.md">
-      <Filter>资源文件</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Test_B+Tree.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

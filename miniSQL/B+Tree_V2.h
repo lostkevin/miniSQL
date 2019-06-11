@@ -3,17 +3,17 @@
 #ifndef uint
 #define uint unsigned int
 #endif // !uint
+#define DEBUG
+#include <vector>
+#include <string>
+using namespace std;
 enum NodeType { LEAF, NONLEAF };
 template<typename _KTy, typename _DTy, uint _order>class BPlusNode;
 
 
-//每个Node包含key和ptr，若B+Node非叶，Node的ptr指向子节点，且子节点的max Key < Node.key
-//若B+Node为叶，除最后一个节点外，每个ptr均指向数据，最后一个ptr指向Rsibling
 //需要排序，重载operator <
-
-//需要支持的方法:search,insert,erase
-//不需要update方法
-template<typename _KTy, typename _DTy, int _order = 3>
+//要求数据类具有tostring及read方法，要求read(tostring(dataptr))恒有效，即_DTy包含索引该tuple的所有信息
+template<typename _KTy, typename _DTy, int _order = 3, string (*ToString)(_DTy*) = _DTy::ToString, _DTy* (*Read)(string) = _DTy::Read>
 class BPlusTree {
 	typedef BPlusNode<_KTy, _DTy, _order> Node;
 	typedef Node* NodePtr;
@@ -25,16 +25,7 @@ public:
 	BPlusTree () {
 		root = nullptr;
 	}
-	void printData () {
-		NodePtr ptr = root;
-		if (!root)return;
-		while (ptr->Type == NONLEAF) {
-			ptr->printData ();
-			std::cout << std::endl << "=====next level======" << std::endl;
-			ptr = ptr->GetNodePointer (0);
-		}
-		ptr->printData ();
-	}
+	~BPlusTree () {}
 	bool insert (_KTy key, DataPtr pData) {
 		NodePtr InsertedNode = Search (key);
 		if (!root) {
@@ -48,7 +39,6 @@ public:
 		}
 		return false;
 	}
-
 	void erase (_KTy key) {
 		NodePtr ErasedNode = Search (key);
 		if (!root)return;
@@ -65,7 +55,25 @@ public:
 			root = nullptr;
 		}
 	}
-
+	//find all elements with key in [min, max]
+	vector<DataPtr> find (_KTy min, _KTy max) {
+		NodePtr ptr = Search (min);
+		vector<DataPtr> res;
+		if (!ptr)return res;
+		uint i = 0;
+		//leaf node
+		for (;i < ptr->size && ptr->key[i] < min; i++);
+		if (i == ptr->size)return res;
+		while (ptr) {
+			if (ptr->key[i] <= max)res.push_back (ptr->ptr[i]);
+			else break;
+			if (++i == ptr->size) {
+				i = 0;
+				ptr = ptr->RLeaf;
+			}
+		}
+		return res;
+	}
 	DataPtr find (_KTy key) {
 		NodePtr ptr = root;
 		if (!root)return nullptr;
@@ -81,6 +89,27 @@ public:
 	bool empty () {
 		return this->root == nullptr;
 	}
+	//将当前实例的所有信息保存到索引文件中，文件名由外部给定
+	bool save (string fileName = ".\\defaultIndexFile.dat") {
+
+	}
+	//从文件中读取B+树信息并重新建立索引
+	bool read (string fileName = ".\\defaultIndexFile.dat") {
+
+	}
+	//
+#ifdef DEBUG
+	void printData () {
+		NodePtr ptr = root;
+		if (!root)return;
+		while (ptr->Type == NONLEAF) {
+			ptr->printData ();
+			std::cout << std::endl << "=====next level======" << std::endl;
+			ptr = ptr->GetNodePointer (0);
+		}
+		ptr->printData ();
+	}
+#endif
 private:
 	NodePtr Search (_KTy key) {
 		if (!root)return nullptr;
@@ -94,7 +123,7 @@ private:
 	}
 };
 
-//为了避免不必要的麻烦，使用了数组作为内部索引存储
+
 //示意图
 //NONLEAF
 //Key1 < Key2 < Key3 < ... < KeyM - 1  maxPtr
@@ -112,7 +141,7 @@ public:
 	typedef BPlusNode* NodePtr;
 	NodeType Type;
 	NodePtr Parent;
-	//这两个指针是为了便于范围查找及delete
+	//这两个指针是为了delete
 	NodePtr RLeaf;
 	NodePtr LLeaf;
 	uint size;
@@ -234,15 +263,17 @@ public:
 			return true;
 		}
 	}
+#ifdef DEBUG
 	void printData () {
 		uint size = this->size;
 		if (this->Type == NONLEAF)size--;
 		for (uint i = 0; i < size; i++)std::cout << this->key[i] << " ";
-		if (RLeaf) { 
+		if (RLeaf) {
 			std::cout << " | ";
 			RLeaf->printData ();
 		}
 	}
+#endif // DEBUG
 
 	void updateKey (_KTy oldKey, _KTy newKey) {
 		for (uint i = 0; i < this->size; i++)
