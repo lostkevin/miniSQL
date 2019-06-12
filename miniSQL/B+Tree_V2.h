@@ -24,8 +24,12 @@ public:
 		this->order = order;
 		root = nullptr;
 	}
-	~BPlusTree () {}
-	bool insert (_KTy key, DataPtr pData) {
+	~BPlusTree () {
+		delete root;
+	}
+	//插入指定key的节点，如果插入失败，返回false，否则返回true
+	bool insert (_KTy key, const _DTy &Data) {
+		DataPtr pData = new _DTy (Data);
 		NodePtr InsertedNode = Search (key);
 		if (!root) {
 			InsertedNode = root = new Node (order);
@@ -38,6 +42,7 @@ public:
 		}
 		return false;
 	}
+	//删除指定key的节点，如果key不存在，什么也不做
 	void erase (_KTy key) {
 		NodePtr ErasedNode = Search (key);
 		if (!root)return;
@@ -88,6 +93,7 @@ public:
 	bool empty () {
 		return this->root == nullptr;
 	}
+
 
 #ifdef DEBUG
 	void printData () {
@@ -154,7 +160,11 @@ public:
 	}
 	~BPlusNode () {
 		if (this->Type != LEAF) {
-			for (uint i = 0; i <= _order; i++)if(ptr[i])delete ptr[i];
+			for (uint i = 0; i < size; i++)delete (NodePtr)(ptr[i]);
+		}
+		else {
+			//析构，释放data
+			for (uint i = 0; i < size; i++)delete (DataPtr)(ptr[i]);
 		}
 		delete ptr;
 		delete key;

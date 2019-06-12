@@ -5,7 +5,7 @@
 using namespace std;
 
 int main ( ) {
-	BPlusTree<int, int> bp(3);
+	BPlusTree<int, int> *pbp = new BPlusTree<int,int>(3);
 	int size = 2000000;
 	int *a = new int[size];
 	for (int i = 0; i < size; i++) {
@@ -16,17 +16,37 @@ int main ( ) {
 		swap (a[rand () % size], a[rand () % size]);
 	}
 	for (int i = 0; i < size; i++) {
-		bp.insert (a[i], new int (a[i] * 2));
+		pbp->insert (a[i], int (a[i] * 2));
 	}
 	for (int i = 0; i < size; i++) {
 		//std::cout << "delete " << a[i] << std::endl;
-		bp.erase (a[i]);
+		//pbp->erase (a[i]);
 		//bp.printData ();
 		//std::cout << std::endl << std::endl;
 	}
-	if (!bp.empty())throw new std::exception ();
+	//if (!pbp->empty())throw new std::exception ();
 	//system ("cls");
-	
+	delete(pbp);
+	pbp = new BPlusTree<int, int> (4);
+	for (int i = 0; i < size; i++) {
+		a[i] = i;
+	}
+	srand (rand () + (uint)time (nullptr));
+	for (int i = 0; i < 10 * size; i++) {
+		swap (a[rand () % size], a[rand () % size]);
+	}
+	for (int i = 0; i < size; i++) {
+		pbp->insert (a[i], int (a[i] * 2));
+	}
+	for (int i = 0; i < size; i++) {
+		//std::cout << "delete " << a[i] << std::endl;
+		//pbp->erase (a[i]);
+		//bp.printData ();
+		//std::cout << std::endl << std::endl;
+	}
+	//if (!pbp->empty ())throw new std::exception ();
+	//system ("cls");
+	delete(pbp);
 	
 	//bp.printData ();
 	//for (int i = 0; i < size; i++) {
