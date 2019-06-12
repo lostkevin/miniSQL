@@ -8,28 +8,27 @@
 #include <string>
 using namespace std;
 enum NodeType { LEAF, NONLEAF };
-template<typename _KTy, typename _DTy, uint _order>class BPlusNode;
+template<typename _KTy, typename _DTy>class BPlusNode;
 
 
 //需要排序，重载operator <
-//要求数据类具有tostring及read方法，要求read(tostring(dataptr))恒有效，即_DTy包含索引该tuple的所有信息
-template<typename _KTy, typename _DTy, int _order = 3, string (*ToString)(_DTy*) = _DTy::ToString, _DTy* (*Read)(string) = _DTy::Read>
+template<typename _KTy, typename _DTy>
 class BPlusTree {
-	typedef BPlusNode<_KTy, _DTy, _order> Node;
+	typedef BPlusNode<_KTy, _DTy> Node;
 	typedef Node* NodePtr;
 	typedef _DTy* DataPtr;
-	const int order = _order;
 	NodePtr root;
 
 public:
-	BPlusTree () {
+	BPlusTree (uint order) {
+		this->order = order;
 		root = nullptr;
 	}
 	~BPlusTree () {}
 	bool insert (_KTy key, DataPtr pData) {
 		NodePtr InsertedNode = Search (key);
 		if (!root) {
-			InsertedNode = root = new Node ();
+			InsertedNode = root = new Node (order);
 		}
 		if (InsertedNode->Insert (key, pData)) {
 			if (root->Parent) {
@@ -89,15 +88,7 @@ public:
 	bool empty () {
 		return this->root == nullptr;
 	}
-	//将当前实例的所有信息保存到索引文件中，文件名由外部给定
-	bool save (string fileName = ".\\defaultIndexFile.dat") {
 
-	}
-	//从文件中读取B+树信息并重新建立索引
-	bool read (string fileName = ".\\defaultIndexFile.dat") {
-
-	}
-	//
 #ifdef DEBUG
 	void printData () {
 		NodePtr ptr = root;
@@ -121,6 +112,7 @@ private:
 		}
 		return ptr;
 	}
+	uint order;
 };
 
 
@@ -132,11 +124,13 @@ private:
 //	Key1 < Key2 ... < KeyM
 //	= Key1 = Key2 ... = KeyM
 
-template<typename _KTy, typename _DTy, uint _order = 3u>
+template<typename _KTy, typename _DTy>
 class BPlusNode {
+private:
+	uint _order;
 public:
-	void* ptr[_order + 1];
-	_KTy key[_order + 1];
+	void** ptr;
+	_KTy* key;
 	typedef _DTy* DataPtr;
 	typedef BPlusNode* NodePtr;
 	NodeType Type;
@@ -145,8 +139,10 @@ public:
 	NodePtr RLeaf;
 	NodePtr LLeaf;
 	uint size;
-	const uint order = _order;
-	BPlusNode () {
+	BPlusNode (uint order) {
+		this->_order = order;
+		ptr = new void*[_order + 1];
+		key = new _KTy[_order + 1];
 		Type = LEAF;
 		Parent = nullptr;
 		size = 0; //指针的size
@@ -154,11 +150,14 @@ public:
 		for (uint i = 0; i <= _order; i++) {
 			ptr[i] = nullptr; key[i] = _KTy ();
 		}
+
 	}
 	~BPlusNode () {
 		if (this->Type != LEAF) {
 			for (uint i = 0; i <= _order; i++)if(ptr[i])delete ptr[i];
 		}
+		delete ptr;
+		delete key;
 	}
 	DataPtr GetDataPointer (uint index) {
 		return (DataPtr)(index < size ? ptr[index] : nullptr);
@@ -187,10 +186,10 @@ public:
 				this->ptr[i] = pData;
 				this->size++;
 			}
-			if (this->size == order + 1) {
-				NodePtr newNode = new BPlusNode ();
+			if (this->size == _order + 1) {
+				NodePtr newNode = new BPlusNode (_order);
 				newNode->Type = this->Type;
-				for (uint i = size / 2; i <= order; i++) {
+				for (uint i = size / 2; i <= _order; i++) {
 					newNode->ptr[newNode->size] = this->ptr[i];
 					this->ptr[i] = nullptr;
 					newNode->key[newNode->size] = this->key[i];
@@ -204,7 +203,7 @@ public:
 				if (RLeaf)RLeaf->LLeaf = newNode;
 				RLeaf = newNode;
 				if (!Parent) {
-					newNode->Parent = Parent = new BPlusNode ();
+					newNode->Parent = Parent = new BPlusNode (_order);
 					Parent->Type = NONLEAF;
 					Parent->key[0] = newNode->key[0];
 					Parent->ptr[1] = newNode;
@@ -232,10 +231,10 @@ public:
 				this->ptr[i + 1] = pData;
 				this->size++;
 			}
-			if (this->size == order + 1) {
-				NodePtr newNode = new BPlusNode ();
+			if (this->size == _order + 1) {
+				NodePtr newNode = new BPlusNode (_order);
 				newNode->Type = this->Type;
-				for (uint i = size / 2; i <= order; i++) {
+				for (uint i = size / 2; i <= _order; i++) {
 					newNode->ptr[newNode->size] = this->ptr[i];
 					this->GetNodePointer (i)->Parent = newNode;
 					this->ptr[i] = nullptr;
@@ -250,7 +249,7 @@ public:
 				if (RLeaf)RLeaf->LLeaf = newNode;
 				RLeaf = newNode;
 				if (!Parent) {
-					newNode->Parent = Parent = new BPlusNode ();
+					newNode->Parent = Parent = new BPlusNode (_order);
 					Parent->Type = NONLEAF;
 					Parent->key[0] = this->key[this->size - 1];
 					Parent->ptr[1] = newNode;
@@ -298,8 +297,8 @@ public:
 		}
 		//3 4 5 6 7
 		//1 1 2 2 3
-		if (this->size == (order - 1) / 2) {
-			if (LLeaf && LLeaf->Parent == this->Parent && LLeaf->size > (order - 1) / 2 + 1) {
+		if (this->size == (_order - 1) / 2) {
+			if (LLeaf && LLeaf->Parent == this->Parent && LLeaf->size > (_order - 1) / 2 + 1) {
 				//从左兄弟取一个节点过来，左兄弟的size>=2，因此左兄弟不用更新key
 				//但本节点需要再次update
 				for (uint j = this->size; j > 0; j--) {
@@ -324,7 +323,7 @@ public:
 				this->size++;
 			}
 			//左节点分不出，看看右节点有没有
-			else if (RLeaf && RLeaf->Parent == this->Parent && RLeaf->size > (order - 1) / 2 + 1) {
+			else if (RLeaf && RLeaf->Parent == this->Parent && RLeaf->size > (_order - 1) / 2 + 1) {
 				//从右兄弟取一个节点过来，右兄弟需更新key
 				//本节点不用更新
 				if (this->Type == LEAF) {

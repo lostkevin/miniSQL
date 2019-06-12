@@ -5,7 +5,7 @@
 using namespace std;
 
 int main ( ) {
-	BPlusTree<int, int> bp;
+	BPlusTree<int, int> bp(3);
 	int size = 2000000;
 	int *a = new int[size];
 	for (int i = 0; i < size; i++) {
