@@ -4,6 +4,7 @@
 #define uint unsigned int
 #endif // !uint
 #define DEBUG
+
 #include <vector>
 #include <string>
 using namespace std;
@@ -42,22 +43,25 @@ public:
 		}
 		return false;
 	}
-	//删除指定key的节点，如果key不存在，什么也不做
-	void erase (_KTy key) {
+	//删除指定key的节点，如果key不存在，返回false，否则抛异常
+	bool erase (_KTy key) {
 		NodePtr ErasedNode = Search (key);
-		if (!root)return;
+		if (!root)return false;
 		
-		ErasedNode->erase (key);
+		bool tmp = ErasedNode->erase (key);
+		if (!tmp)return false;
 		if (root->size == 1 && root->Type == NONLEAF) {
 			NodePtr tmp = root;
 			root = root->GetNodePointer (0);
 			root->Parent = nullptr;
-			free (tmp);
+			tmp->ptr[0] = nullptr;
+			delete tmp;
 		}
 		else if (!root->size) {
-			free (root);
+			delete root;
 			root = nullptr;
 		}
+		return true;
 	}
 	//find all elements with key in [min, max]
 	vector<DataPtr> find (_KTy min, _KTy max) {
@@ -101,7 +105,10 @@ public:
 		if (!root)return;
 		while (ptr->Type == NONLEAF) {
 			ptr->printData ();
+#ifdef PRINT
 			std::cout << std::endl << "=====next level======" << std::endl;
+#endif // PRINT
+
 			ptr = ptr->GetNodePointer (0);
 		}
 		ptr->printData ();
@@ -275,12 +282,26 @@ public:
 #ifdef DEBUG
 	void printData () {
 		uint size = this->size;
+		if (this->Type == LEAF) {
+			for (uint i = this->size; i < _order; i++) {
+				if (this->ptr[i])throw new exception ();
+			}
+		}
+		else {
+			for (uint i = this->size + 1; i < _order; i++) {
+				if (this->ptr[i])throw new exception ();
+			}
+		}
+
+#ifdef PRINT
 		if (this->Type == NONLEAF)size--;
 		for (uint i = 0; i < size; i++)std::cout << this->key[i] << " ";
 		if (RLeaf) {
 			std::cout << " | ";
 			RLeaf->printData ();
 		}
+#endif // PRINT
+
 	}
 #endif // DEBUG
 
@@ -293,15 +314,24 @@ public:
 		if (this->Parent)this->Parent->updateKey (oldKey, newKey);
 	}
 
-	void erase (_KTy key) {
+	bool erase (_KTy key) {
+		bool flag = false;
 		for (uint i = 0; i < this->size; i++) {
 			if (this->key[i] == key) {
+				if (this->Type == LEAF) {
+					delete (DataPtr)(this->ptr[i]);
+				}
+				else {
+					delete (NodePtr)(this->ptr[i]);
+				}
+				this->ptr[i] = nullptr;
 				for (uint j = i + 1; j < this->size; j++) {
 					this->key[j - 1] = this->key[j];
 					this->ptr[j - 1] = this->ptr[j];
 				}
-				this->size--;
+				this->ptr[--this->size] = nullptr;
 				if(this->Parent)this->Parent->updateKey (key, this->key[i]);
+				flag = true;
 				break;
 			}
 		}
@@ -315,15 +345,17 @@ public:
 					this->key[j] = this->key[j - 1];
 					this->ptr[j] = this->ptr[j - 1];
 				}
-				
+				this->ptr[0] = nullptr;
 				if (this->Type == LEAF) {
 					this->key[0] = LLeaf->key[LLeaf->size - 1];
 					this->ptr[0] = LLeaf->ptr[LLeaf->size - 1];
+					LLeaf->ptr[LLeaf->size - 1] = nullptr;
 					this->Parent->updateKey (this->key[1], this->key[0]);
 				}
 				else {
 					this->ptr[0] = LLeaf->ptr[LLeaf->size - 1];
 					LLeaf->GetNodePointer (LLeaf->size - 1)->Parent = this;
+					LLeaf->ptr[LLeaf->size - 1] = nullptr;
 					int i = 0;
 					for (; this->Parent->ptr[i] != this->LLeaf; i++);
 					this->key[0] = this->Parent->key[i];
@@ -339,11 +371,13 @@ public:
 				if (this->Type == LEAF) {
 					this->key[this->size] = RLeaf->key[0];
 					this->ptr[this->size] = RLeaf->ptr[0];
+					RLeaf->ptr[0] = nullptr;
 					this->Parent->updateKey (RLeaf->key[0], RLeaf->key[1]);
 				}
 				else {
 					this->ptr[this->size] = RLeaf->ptr[0];
 					RLeaf->GetNodePointer (0)->Parent = this;
+					RLeaf->ptr[0] = nullptr;
 					int i = 0;
 					for (; this->Parent->ptr[i] != this; i++);
 					this->key[this->size - 1] = this->Parent->key[i];
@@ -353,7 +387,7 @@ public:
 					RLeaf->key[j - 1] = RLeaf->key[j];
 					RLeaf->ptr[j - 1] = RLeaf->ptr[j];
 				}
-				RLeaf->size--;
+				RLeaf->ptr[--RLeaf->size] = nullptr;
 				this->size++;
 			}
 			else {
@@ -372,10 +406,10 @@ public:
 						this->ptr[i] = LLeaf->ptr[i];
 						this->key[i] = LLeaf->key[i];
 						if (this->Type == NONLEAF)LLeaf->GetNodePointer (i)->Parent = this;
+						LLeaf->ptr[i] = nullptr;
 					}
 					if (this->Type == NONLEAF)this->key[LLeaf->size - 1] = nextKey;
 					this->size += LLeaf->size;
-					
 					//从链表中取出
 					if(this->LLeaf->LLeaf)this->LLeaf->LLeaf->RLeaf = this;
 					this->LLeaf = this->LLeaf->LLeaf;
@@ -394,10 +428,10 @@ public:
 						RLeaf->ptr[i] = this->ptr[i];
 						RLeaf->key[i] = this->key[i];
 						if (this->Type == NONLEAF)this->GetNodePointer (i)->Parent = RLeaf;
+						this->ptr[i] = nullptr;
 					}
 					if (this->Type == NONLEAF)RLeaf->key[this->size - 1] = nextKey;
 					RLeaf->size += this->size;
-
 					//从链表中取出
 					this->RLeaf->LLeaf = this->LLeaf;
 					if (this->LLeaf)this->LLeaf->RLeaf = this->RLeaf;
@@ -406,11 +440,13 @@ public:
 					//都不可以合并，说明该节点的父亲节点若存在，仅有一个儿子，这种情况仅出现在该节点为根
 					if (this->Parent)throw new std::exception ("This node is not a root!");
 					//根的修改需要交给外部完成，若this->size!=0,外部不需要做任何操作,否则释放内存并初始化root=nullptr
-					return;
+					return true;
 				}
 				//合并结束，删除父节点中的被合并节点
 				this->Parent->erase (nextKey);
 			}
 		}
+
+		return flag;
 	}
 };

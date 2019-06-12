@@ -43,10 +43,10 @@ public:
 	//defineTree,在堆上实例化树，确定索引基本信息
 	//若index被define，该实例将仅支持insert/erase直到该index被drop
 	bool defineTree (TreeTYPE type);
-	//插入,用于建立新index,若key重复将会更新索引
+	//插入,用于建立新index,若key重复将会更新索引，这里将会抛出异常
 	template<typename _KTy> void insert (const _KTy &key, const IndexInfo & data);
-	//删除，若key不存在则什么也不做
-	template<typename _KTy> void erase (const _KTy &key);
+	//删除，若key不存在返回false, 删除成功返回true,否则抛异常
+	template<typename _KTy> bool erase (const _KTy &key);
 	//drop, 销毁索引,undefine index
 	void dropIndex ();
 	//save, 保存索引至文件
@@ -59,3 +59,25 @@ private:
 	TreeTYPE TreeType;
 };
 
+template<typename _KTy>
+inline const IndexInfo IndexManager::find (_KTy key)
+{
+	return IndexInfo ();
+}
+
+template<typename _KTy>
+inline const vector<IndexInfo> IndexManager::find (_KTy min, _KTy max)
+{
+	return vector<IndexInfo> ();
+}
+
+template<typename _KTy>
+inline void IndexManager::insert (const _KTy & key, const IndexInfo & data)
+{
+}
+
+template<typename _KTy>
+inline bool IndexManager::erase (const _KTy & key)
+{
+	return false;
+}

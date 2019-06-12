@@ -24,29 +24,30 @@ using namespace std;
 //删除时不会减少数据文件体积（仅修改索引和freelist）
 //一个table一个文件，便于储存
 
-class Buffer {
-private:
-	string fileName;
-	BYTE* pBlock;
-	uint tupleSize;
-	bool PIN;
-	//相对文件头的偏移量
-	uint blockOffset;
-	//块大小是BLOCK_SIZE，将所有tuple对齐到2^k,tuple大于BLOCK_SIZE时抛异常
-	//大程要求一个tuple的size至多为8160 （255*32）
-	uint ROUND ();
-public:
-	const uint _blockSize = MAX_BLOCK_SIZE;
-	bool IsDirty;
-	Buffer ();
-	Buffer (const string &fileName);
-	~Buffer ();
-	
-};
-
 //缓冲区必须支持不同table的同时读写，因此buffer内部保存tuple的size
 class BufferManager {
 private:
+	class Buffer {
+	private:
+		string fileName;
+
+		uint tupleSize;
+		bool PIN;
+		//相对文件头的偏移量
+		uint blockOffset;
+		//块大小是BLOCK_SIZE，将所有tuple对齐到2^k,tuple大于BLOCK_SIZE时抛异常
+		//大程要求一个tuple的size至多为8192 （256*32）
+		uint ROUND ();
+	public:
+		BYTE* pBlock;
+		const uint _blockSize = MAX_BLOCK_SIZE;
+		bool IsDirty;
+		Buffer ();
+		Buffer (const string &fileName);
+		~Buffer ();
+
+	};
+
 	//缓冲区
 	Buffer* BufferRegion;
 	uint blockUsed;

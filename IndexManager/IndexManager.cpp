@@ -16,3 +16,12 @@ bool IndexManager::defineTree (TreeTYPE type)
 void IndexManager::dropIndex ()
 {
 }
+
+bool IndexManager::save (const string & fileName)
+{
+	return false;
+}
+
+void IndexManager::load (const string & fileName)
+{
+}
