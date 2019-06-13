@@ -1,5 +1,11 @@
 ### BufferManager模块说明
 
+#### 一些说明
+
+为了使程序尽可能简洁，该模块仅允许一个实例。
+
+每个模块实例化时获得一个这个模块实例的指针即可
+
 #### 成员列表
 
 public 接口:
@@ -30,7 +36,16 @@ public 接口:
 着key-indexinfo对，为了数据安全，储存indexinfo而非单纯的offset
 + data文件 : 数据page内储存了一个到数个tuple，这个数目由BufferManager决定（需给出tuple的size）
 
-//TODO：下面插入一张数据流图
+### Buffer结构
+
+BufferManager 仅包含两个成员:Buffer\BufferIndex,Buffer将整个缓冲区建立在最小堆上，保证了替换从尽可能早读入的page开始
+
+Buffer除了保存整个缓冲池的相关属性以外，核心是一个Page *Array
+
+BufferIndex使用STL库，降低索引Node的复杂度，便于快速判断给定的IndexInfo包含的块是否已读入内存，两次索引后也能从
+BufferIndex中获得一个Page指针
+
+Page保存着从磁盘读入的数据，并直接在这些数据上进行读写，当Page被销毁时，Page维护的数据将会自动更新到文件中
 
 
 

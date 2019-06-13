@@ -3,9 +3,17 @@
 //有啥宏都可以丢这里
 #include <string>
 using namespace std;
+//缓冲块数目
+#define MAX_BLOCK_NUM 0x1000
+//缓冲块大小
+#ifndef MAX_BLOCK_SIZE
+#define MAX_BLOCK_SIZE 0x2000
+#endif // !MAX_BLOCK_SIZE
+//裸缓冲区大小4K*8K=32M，实际会比这更大
+#define MAX_BUFFER_SIZE (MAX_BLOCK_NUM * MAX_BLOCK_SIZE)
 
 #ifndef BYTE
-#define BYTE unsigned char
+#define BYTE char
 #endif // !BYTE
 
 #ifndef uint
@@ -20,23 +28,22 @@ private:
 	//文件偏移量
 	uint _fileOffset;
 	friend class IndexManager;
+	friend class BufferManager;
+	IndexInfo (uint size, uint fileOffset) {
+		_fileOffset = fileOffset;
+		_size = size;
+	}
+
+	IndexInfo (uint fileOffset) {
+		_fileOffset = fileOffset;
+	}
 public:
 	friend istream & operator>>(istream & is, IndexInfo & info);
 	IndexInfo () {
 		_fileOffset = 0;
-	}
-	uint fileOffset () const {
-		return _fileOffset;
+		_size = MAX_BLOCK_SIZE;
 	}
 };
 
 using namespace std;
 
-//缓冲块数目
-#define MAX_BLOCK_NUM 4096
-//缓冲块大小
-#ifndef MAX_BLOCK_SIZE
-#define MAX_BLOCK_SIZE 8192
-#endif // !MAX_BLOCK_SIZE
-//裸缓冲区大小4K*8K=32M，实际会比这更大
-#define MAX_BUFFER_SIZE (MAX_BLOCK_NUM * MAX_BLOCK_SIZE)

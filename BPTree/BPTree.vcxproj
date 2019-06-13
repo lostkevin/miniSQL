@@ -115,7 +115,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\miniSQL\B+Tree_V2.h" />
     <ClInclude Include="BPTree_V3.h" />
   </ItemGroup>
   <ItemGroup>

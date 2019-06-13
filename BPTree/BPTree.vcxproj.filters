@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\miniSQL\B+Tree_V2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="BPTree_V3.h">
       <Filter>头文件</Filter>
     </ClInclude>
