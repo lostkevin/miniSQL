@@ -8,7 +8,9 @@ using namespace std;
 //缓冲块数目
 #define MAX_BLOCK_NUM 4096
 //缓冲块大小
+#ifndef MAX_BLOCK_SIZE
 #define MAX_BLOCK_SIZE 8192
+#endif // !MAX_BLOCK_SIZE
 //缓冲区大小4K*8K=32M
 #define MAX_BUFFER_SIZE (MAX_BLOCK_NUM * MAX_BLOCK_SIZE)
 
@@ -52,13 +54,8 @@ private:
 	Buffer* BufferRegion;
 	uint blockUsed;
 	const uint maxBlock = MAX_BLOCK_NUM;
-	IndexManager indexManager;
 	//保存所有block到disk中,不返回值，失败抛异常
 	void SaveAll ();
-	//搜索,返回该tuple的handle
-	template<typename _KTy>BYTE* getTuple (const _KTy & key);
-	//范围搜索，返回tuple的handle
-	template<typename _KTy>vector<BYTE*> getTuple (const _KTy & min, const _KTy & max);
 	//从disk中读取一个block到buffer中，自动保存被替换的buffer, 读取成功返回true
 	//需要给出一个tuple的size
 	bool Load (const string &fileName, uint tupleSize);

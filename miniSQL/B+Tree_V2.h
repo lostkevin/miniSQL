@@ -12,6 +12,8 @@ enum NodeType { LEAF, NONLEAF };
 template<typename _KTy, typename _DTy>class BPlusNode;
 
 
+
+
 //需要排序，重载operator <
 template<typename _KTy, typename _DTy>
 class BPlusTree {
@@ -21,7 +23,12 @@ class BPlusTree {
 	NodePtr root;
 
 public:
+	struct Pair {
+		_KTy first;
+		_DTy second;
+	};
 	BPlusTree (uint order) {
+		size = 0;
 		this->order = order;
 		root = nullptr;
 	}
@@ -39,6 +46,7 @@ public:
 			if (root->Parent) {
 				root = root->Parent; //至多上升一层
 			}
+			size++;
 			return true;
 		}
 		return false;
@@ -50,6 +58,7 @@ public:
 		
 		bool tmp = ErasedNode->erase (key);
 		if (!tmp)return false;
+		size--;
 		if (root->size == 1 && root->Type == NONLEAF) {
 			NodePtr tmp = root;
 			root = root->GetNodePointer (0);
@@ -97,7 +106,23 @@ public:
 	bool empty () {
 		return this->root == nullptr;
 	}
-
+	uint getSize () {
+		return this->size;
+	}
+	void getAllPair (vector<Pair> & v) {
+		NodePtr ptr = root;
+		if (!root)return;
+		while (ptr->Type == NONLEAF) {
+			ptr = ptr->GetNodePointer (0);
+		}
+		while (ptr) {
+			for (uint i = 0; i < ptr->size; i++) {
+				v.push_back (Pair{ ptr->key[0], *ptr->GetDataPointer (i) });
+			}
+			ptr = ptr->RLeaf;
+		}
+		return;
+	}
 
 #ifdef DEBUG
 	void printData () {
@@ -126,6 +151,7 @@ private:
 		return ptr;
 	}
 	uint order;
+	uint size;
 };
 
 
@@ -152,6 +178,7 @@ public:
 	NodePtr RLeaf;
 	NodePtr LLeaf;
 	uint size;
+
 	BPlusNode (uint order) {
 		this->_order = order;
 		ptr = new void*[_order + 1];
@@ -449,4 +476,5 @@ public:
 
 		return flag;
 	}
+
 };
