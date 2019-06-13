@@ -1,5 +1,4 @@
 #include <fstream>
-#include "IndexManager.h"
 #ifndef MAX_BLOCK_SIZE
 #define MAX_BLOCK_SIZE 8192
 #endif // !MAX_BLOCK_SIZE
