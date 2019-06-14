@@ -19,7 +19,8 @@ public 接口:
 一致，不一致抛异常
 + **void erase (const IndexInfo &info, const string& fileName)** : 擦除file中info指向的Block
 + **void drop (const string & fileName)** : 删除文件，并释放所有该文件的Page
-
++ **bool IsFileExist(const string& fileName)** : 判断该文件是否存在
++ **void setPageState (const string &fileName, const IndexInfo &info)** ：锁定某个索引指向的数据块，避免这个数据块被释放。
 ### 关于文件储存
 
 @SK catalog的信息请自己保存读取，不需要通过buffer
@@ -30,8 +31,18 @@ public 接口:
 
 0x00 文件头，储存每个数据块的大小以及freelist的信息
 
-0x01~ 数据区
+读取文件头数据可以按照下列格式调用
 
+bufferMgr.readRawData (fileName, IndexInfo (), header);
+
+修改文件头时，前十六字节不会被写入
+
+在文件头中（以下是字节地址）
+> 0x00 - 0x07 文件的blocksize（Buffer使用）
+> 0x08 - 0x0F 首个freelist的地址（buffer使用）
+> 0x10 - 0x2000 客户区，各模块可以自行分配
+
+0x01~ 数据区
 + index文件 : 建立时要求一个node尽可能接近pagesize，保证一次IO读入一个node并使得order尽可能大（使B+树尽可能粗壮），每个node保存
 着key-indexinfo对，为了数据安全，储存indexinfo而非单纯的offset
 + data文件 : 数据page内储存了一个到数个tuple，这个数目由BufferManager决定（需给出tuple的size）

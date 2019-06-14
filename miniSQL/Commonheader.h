@@ -6,19 +6,13 @@ using namespace std;
 //缓冲块数目
 #define MAX_BLOCK_NUM 0x1000
 //缓冲块大小
-#ifndef MAX_BLOCK_SIZE
-#define MAX_BLOCK_SIZE 0x2000
-#endif // !MAX_BLOCK_SIZE
+//为了避免数据的跨页储存，极限是32*char（255）= 8192
+//Index没有这个问题，一个pair至多260Bytes，所以一个节点至少能做到30-40扇出
+#define PAGE_SIZE 0x2000
 //裸缓冲区大小4K*8K=32M，实际会比这更大
-#define MAX_BUFFER_SIZE (MAX_BLOCK_NUM * MAX_BLOCK_SIZE)
-
-#ifndef BYTE
+#define MAX_BUFFER_SIZE (MAX_BLOCK_NUM * PAGE_SIZE)
 #define BYTE char
-#endif // !BYTE
-
-#ifndef uint
 #define uint unsigned int
-#endif // !uint
 
 
 class IndexInfo {
@@ -38,11 +32,21 @@ private:
 		_fileOffset = fileOffset;
 	}
 public:
-	friend istream & operator>>(istream & is, IndexInfo & info);
 	IndexInfo () {
 		_fileOffset = 0;
-		_size = MAX_BLOCK_SIZE;
+		_size = PAGE_SIZE;
 	}
+};
+
+//测试两个类型是否可以转换
+template<typename T, typename U>
+class Conversion {
+private:
+	static char Test (U) {}
+	static int Test (...) {}
+	static T MakeT () {}
+public:
+	const bool state = (sizeof (Test (MakeT ())) == sizeof (char));
 };
 
 using namespace std;

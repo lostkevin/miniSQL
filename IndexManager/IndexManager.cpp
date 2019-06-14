@@ -1,267 +1,299 @@
 #include <fstream>
-#ifndef MAX_BLOCK_SIZE
-#define MAX_BLOCK_SIZE 8192
-#endif // !MAX_BLOCK_SIZE
+#include "IndexManager.h"
 
-using namespace std;
 
-IndexManager::IndexManager ()
+uint IndexManager::calcOrder ( uint KeySize)
 {
-	defined = false;
-	BPTree = nullptr;
-	treeType = INT; //无所谓
+	uint pairSize = sizeof (IndexInfo) + KeySize;
+	uint freeSize = PAGE_SIZE - 3 * sizeof(IndexInfo) - sizeof (uint);
+	return freeSize / pairSize - 1;
+}
+
+bool IndexManager::fail ()
+{
+	return (this->type != UNDEF) && ITree;
+}
+
+bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
+{
+	if(this->type != UNDEF || type == UNDEF)return false;
+	BYTE header[PAGE_SIZE];
+	BYTE* ptr = header;
+	*(uint*)ptr = PAGE_SIZE;
+	ptr += 16;
+	//0x10-0x17 索引类型（int索引，float索引，string索引）
+	*(TreeTYPE*)ptr = this->type = type;
+	switch (type) {
+	case INT: {
+		ITree = new Index<int> ();
+		if (keySize != 4)throw new exception ("incorrect size");
+		break;
+	}
+	case FLOAT: {
+		FTree = new Index<float> ();
+		if (keySize != 4)throw new exception ("incorrect size");
+		break;
+	}
+	case STRING: {
+		CTree = new Index<string> ();
+		if (keySize  <= 1 || keySize > 256)throw new exception ("incorrect size");
+		break;
+	}
+	}
+	ptr += sizeof (TreeTYPE);
+	*(uint*)ptr = keySize;
+	ptr += sizeof (uint);
+	*(uint*)ptr = calcOrder (keySize);
+	IOManager.WriteRawData (IndexInfo (), header);
+	return true;
+}
+
+IndexManager::IndexManager (BufferManager & bufferMgr):IOManager (bufferMgr) 
+{
+	type = UNDEF;
+	ITree = nullptr;
+}
+
+IndexManager::IndexManager (const string & fileName, BufferManager & bufferMgr):IOManager (fileName, bufferMgr)
+{
+	if (bufferMgr.IsFileExist (fileName)) {
+		BYTE header[PAGE_SIZE];
+		bufferMgr.readRawData (fileName, IndexInfo (), header);
+		BYTE* ptr = header;
+		ptr += 16;
+		//0x10-0x17 索引类型（int索引，float索引，string索引）
+		type = *(TreeTYPE*)ptr;
+		switch (type) {
+		case INT: {
+			ITree = new Index<int> ();
+			break;
+		}
+		case FLOAT: {
+			FTree = new Index<float>();
+			break;
+		}
+		case STRING: {
+			CTree = new Index<string>();
+			break;
+		}
+		default:
+			//File Exist But Type Undef, error
+			ITree = nullptr;
+		}
+	}
+	else {
+		type = UNDEF;
+		ITree = nullptr;
+	}
 }
 
 IndexManager::~IndexManager  ()
 {
-	if (BPTree) {
-		//if (!defined)throw new exception ("Exist a tree without keytype defined!");
-		switch (treeType) {
-		case INT: {
-			((IntTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		case FLOAT: {
-			((FloatTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		case STRING: {
-			((CharTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		}
+	switch (type) {
+	case INT: {
+		delete ITree;
+		break;
+	}
+	case FLOAT: {
+		delete FTree;
+		break;
+	}
+	case STRING: {
+		delete CTree;
+		break;
+	}
 	}
 }
 
-bool IndexManager::defineTree (TreeTYPE type)
+bool IndexManager::open (const string & fileName)
 {
-	if(defined)return false;
-	this->treeType = type;
-	if (treeType == INT) {
-		BPTree = new IntTree (getNodeSize());
-	}
-	else if (treeType == FLOAT) {
-		BPTree = new FloatTree (getNodeSize ());
+	if (IOManager.open (fileName)) {
+		BYTE header[PAGE_SIZE];
+		IOManager.ReadRawData (IndexInfo (), header);
+		BYTE* ptr = header;
+		ptr += 16;
+		//0x10-0x17 索引类型（int索引，float索引，string索引）
+		type = *(TreeTYPE*)ptr;
+		switch (type) {
+		case INT: {
+			ITree = new Index<int> ();
+			break;
+		}
+		case FLOAT: {
+			FTree = new Index<float> ();
+			break;
+		}
+		case STRING: {
+			CTree = new Index<string> ();
+			break;
+		}
+		default:
+			//File Exist But Type Undef, error
+			ITree = nullptr;
+			return false;
+		}
 	}
 	else {
-		BPTree = new CharTree (getNodeSize ());
-	}
-	return defined = true;
-}
-
-void IndexManager::dropIndex ()
-{
-	if (BPTree) {
-		if (!defined)throw new exception ("Exist a tree without keytype defined!");
-		switch (treeType) {
-		case INT: {
-			((IntTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		case FLOAT: {
-			((FloatTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		case STRING: {
-			((CharTree*)BPTree)->~BPlusTree ();
-			break;
-		}
-		}
-	}
-	this->BPTree = nullptr;
-	this->defined = false;
-}
-
-bool IndexManager::save (const string & fileName)
-{
-	if (defined) {
-		if (!BPTree)throw new exception ("defined but do not exist a tree");
-		ofstream fs = ofstream (fileName, ios::binary);
-		if (!fs)return false;
-		//第一行 记录数n keyType
-		uint size = this->getSize ();
-		fs << size << " " << treeType << endl;
-		//2-n+1行 DataInfo Key
-		for (uint i = 0; i < size; i++) {
-			if (treeType == INT) {
-				IntTree* ITree = (IntTree*)BPTree;
-				vector<IntTree::Pair> v;
-				ITree->getAllPair (v);
-				for (uint i = 0; i < v.size (); i++) {
-					fs << v[i].first << " " << v[i].second << endl;
-				}
-			}
-			else if (treeType == FLOAT) {
-				FloatTree* FTree = (FloatTree*)BPTree;
-				vector<FloatTree::Pair> v;
-				FTree->getAllPair (v);
-				for (uint i = 0; i < v.size (); i++) {
-					fs << v[i].first << " " << v[i].second << endl;
-				}
-			}
-			else {
-				CharTree* CTree = (CharTree*)BPTree;
-				vector<CharTree::Pair> v;
-				CTree->getAllPair (v);
-				for (uint i = 0; i < v.size (); i++) {
-					fs << v[i].first << " " << v[i].second << endl;
-				}
-			}
-		}
-		return true;
-	}
-	else return false;
-}
-
-bool IndexManager::load (const string & fileName)
-{
-	ifstream fs = ifstream(fileName, ios::binary);
-	if (!fs)return false;
-	uint size;
-	uint type;
-	fs >> size >> type;
-	treeType = (TreeTYPE)type;
-	for (uint i = 0; i < size; i++) {
-		if (treeType == INT) {
-			IntTree* ITree = (IntTree*)BPTree;
-			IntTree::Pair p;
-			for (uint i = 0; i < size; i++) {
-				fs >> p.first >> p.second;
-				ITree->insert (p.first, p.second);
-			}
-		}
-		else if (treeType == FLOAT) {
-			FloatTree* FTree = (FloatTree*)BPTree;
-			FloatTree::Pair p;
-			for (uint i = 0; i < size; i++) {
-				fs >> p.first >> p.second;
-				FTree->insert (p.first, p.second);
-			}
-		}
-		else {
-			CharTree* CTree = (CharTree*)BPTree;
-			CharTree::Pair p;
-			for (uint i = 0; i < size; i++) {
-				fs >> p.first >> p.second;
-				CTree->insert (p.first, p.second);
-			}
-		}
+		type = UNDEF;
+		ITree = nullptr;
 	}
 	return true;
 }
 
-uint IndexManager::getNodeSize ()
+void IndexManager::close ()
 {
-	return uint ();
-}
-
-template<typename _KTy>
-inline const IndexInfo IndexManager::find (_KTy key)
-{
-	if (defined) {
-		if (!BPTree)throw new exception ("defined but do not exist a tree");
-		if (treeType == INT) {
-			IntTree* ITree = (IntTree*)BPTree;
-			return *ITree->find (key);
-		}
-		else if (treeType == FLOAT) {
-			FloatTree* FTree = (FloatTree*)BPTree;
-			return *FTree->find (key);
-		}
-		else {
-			CharTree* CTree = (CharTree*)BPTree;
-			return *CTree->find (key);
-		}
+	switch (type) {
+	case INT: {
+		delete ITree;
+		break;
 	}
-	else throw new exception ("Exist a tree without keytype defined!");
-}
-
-template<typename _KTy>
-inline const vector<IndexInfo> IndexManager::find (_KTy min, _KTy max)
-{
-	if (defined) {
-		if (!BPTree)throw new exception ("defined but do not exist a tree");
-		vector<IndexInfo> res;
-		if (treeType == INT) {
-			IntTree* ITree = (IntTree*)BPTree;
-			vector<IndexInfo*> v = ITree->find (min, max);
-			for (uint i = 0; i < v.size (); i++) {
-				res.push_back (*v[i]);
-			}
-		}
-		else if (treeType == FLOAT) {
-			FloatTree* FTree = (FloatTree*)BPTree;
-			vector<IndexInfo*> v = FTree->find (min, max);
-			for (uint i = 0; i < v.size (); i++) {
-				res.push_back (*v[i]);
-			}
-		}
-		else {
-			CharTree* CTree = (CharTree*)BPTree;
-			vector<IndexInfo*> v = CTree->find (min, max);
-			for (uint i = 0; i < v.size (); i++) {
-				res.push_back (*v[i]);
-			}
-		}
-		return res;
+	case FLOAT: {
+		delete FTree;
+		break;
 	}
-	else throw new exception ("Exist a tree without keytype defined!");
-}
-
-template<typename _KTy>
-inline void IndexManager::insert (const _KTy & key, const IndexInfo & data)
-{
-	if (defined) {
-		if (!BPTree)throw new exception ("defined but do not exist a tree");
-		if (treeType == INT) {
-			IntTree* ITree = (IntTree*)BPTree;
-			ITree->insert (key, data);
-		}
-		else if (treeType == FLOAT) {
-			FloatTree* FTree = (FloatTree*)BPTree;
-			FTree->insert (key, data);
-		}
-		else {
-			CharTree* CTree = (CharTree*)BPTree;
-			CTree->insert (key, data);
-		}
+	case STRING: {
+		delete CTree;
+		break;
 	}
-	else throw new exception ("Exist a tree without keytype defined!");
-}
-
-template<typename _KTy>
-inline bool IndexManager::erase (const _KTy & key)
-{
-	if (defined) {
-		if (!BPTree)throw new exception ("defined but do not exist a tree");
-		if (treeType == INT) {
-			IntTree* ITree = (IntTree*)BPTree;
-			return ITree->erase (key);
-		}
-		else if (treeType == FLOAT) {
-			FloatTree* FTree = (FloatTree*)BPTree;
-			return FTree->erase (key);
-		}
-		else {
-			CharTree* CTree = (CharTree*)BPTree;
-			return CTree->erase (key);
-		}
 	}
-	else throw new exception ("Exist a tree without keytype defined!");
+	IOManager.close ();
+	type = UNDEF;
+	ITree = nullptr;
 }
 
-ostream & operator<<(ostream & os, const IndexInfo & info)
+void IndexManager::dropIndex ()
 {
-	os << info.fileOffset () << " " << info.fileName();
-	return os;
+	switch (type) {
+	case INT: {
+		ITree->dropIndex ();
+		break;
+	}
+	case FLOAT: {
+		FTree->dropIndex ();
+		break;
+	}
+	case STRING: {
+		CTree->dropIndex ();
+		break;
+	}
+	}
+	IOManager.drop ();
+	type = UNDEF;
+	ITree = nullptr;
 }
 
-istream & operator>>(istream & is, IndexInfo & info)
+template<typename _Ty>
+inline const IndexInfo IndexManager::find (_Ty key)
 {
-
-	is >> info._fileOffset >> info._fileName;
-	info._loadState = false;
-	return is;
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
+		return ITree->find (key);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
+		return FTree->find (key);
+	}
+	case STRING: {
+		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
+		return CTree->find (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
 }
 
+template<typename _Ty>
+inline const vector<IndexInfo> IndexManager::find (_Ty min, _Ty max)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
+		return ITree->find (min, max);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
+		return FTree->find (min, max);
+	}
+	case STRING: {
+		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
+		return CTree->find (min, max);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
 
+template<typename _Ty>
+inline void IndexManager::insert (const _Ty & key, const IndexInfo & data)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
+		ITree->insert (key, data);
+		break;
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
+		FTree->insert (key, data);
+		break;
+	}
+	case STRING: {
+		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
+		CTree->insert (key, data);
+		break;
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<typename _Ty>
+inline bool IndexManager::erase (const _Ty & key)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
+		return ITree->erase (key);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
+		return FTree->erase (key);
+	}
+	case STRING: {
+		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
+		return CTree->erase (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+bool IndexManager::BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
+{
+	return bufferMgr.readRawData (fileName, info, rawData);
+}
+
+bool IndexManager::BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&rawData)[PAGE_SIZE])
+{
+	ofstream fs (fileName);
+	if (!fs)return false;
+	fs.close ();
+	bufferMgr.WriteRawData (fileName, info, rawData);
+}
+
+void IndexManager::BufferIO::drop ()
+{
+	bufferMgr.drop (fileName);
+}
+
+void IndexManager::BufferIO::close ()
+{
+	fileName = string ();
+}
+
+bool IndexManager::BufferIO::open (const string & fileName)
+{
+	this->fileName = fileName;
+	return bufferMgr.IsFileExist (fileName);
+}

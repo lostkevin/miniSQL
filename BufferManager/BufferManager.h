@@ -1,9 +1,7 @@
 #pragma once
 #include <string>
 #include <map>
-#include <vector>
-#include "..\IndexManager\IndexManager.h"
-
+#include "..\miniSQL\Commonheader.h"
 
 //缓冲区必须支持多个文件
 class BufferManager {
@@ -18,9 +16,9 @@ private:
 	public:
 		//指向块的指针
 		BYTE* pBlock;
-		static const uint _pageSize = MAX_BLOCK_SIZE;
+		static const uint _pageSize = PAGE_SIZE;
 		bool setDirty () {
-			this->IsDirty = true;
+			return this->IsDirty ? false : (this->IsDirty = true);
 		}
 		bool PIN;
 		Page (const string &fileName, uint blockOffset);
@@ -70,8 +68,8 @@ private:
 	//向freelist中添加数据
 	void AddFreeNode (const string & fileName, uint offset);
 public:
-	//读取某个数据块的信息，将信息写到result指针指向的内存
-	void readRawData (const string& fileName, const IndexInfo &info, BYTE * result);
+	//读取某个数据块的信息，将信息写到result指针指向的内存, 如果读取失败，返回false
+	bool readRawData (const string& fileName, const IndexInfo &info, BYTE * result);
 	//向indexinfo指向的位置写入size字节, 数据源为pData，若数据不在buffer中，需要读入
 	void WriteRawData (const string& fileName, const IndexInfo &info, const BYTE * pData);
 	//新建一个块，size为该数据块的大小，为0时使用文件头设置（=0时文件不存在抛异常）
@@ -81,5 +79,8 @@ public:
 	void erase (const string & fileName, const IndexInfo &info);
 	//drop,删除文件，释放该文件的所有缓冲块
 	void drop (const string & fileName);
+	//判断文件是否存在
+	bool IsFileExist (const string& fileName);
+	void setPageState (const string &fileName, const IndexInfo &info, bool state);
 };
 

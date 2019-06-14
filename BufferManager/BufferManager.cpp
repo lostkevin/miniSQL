@@ -131,7 +131,6 @@ BufferManager::Page::~Page ()
 	delete pBlock;
 }
 
-
 uint BufferManager::ROUND (uint blockSize)
 {
 	//将一个数据块的大小向上进位至2^k
@@ -197,6 +196,8 @@ uint BufferManager::getFreeNode (const string & fileName)
 {
 	Page* ptr = getPage (fileName, IndexInfo ());
 	if (ptr) {
+		bool lastState[2];
+		lastState[0] = ptr->PIN;
 		ptr->PIN = true;
 		BYTE* pData = ptr->pBlock;
 		pData += 8;
@@ -205,6 +206,7 @@ uint BufferManager::getFreeNode (const string & fileName)
 		//维护freelist，读入buffer的页
 		Page* nextPage = getPage (fileName, IndexInfo (nextNode));
 		if (!nextPage)throw new exception ("Unknown Exception");
+		lastState[1] = nextPage->PIN;
 		nextPage->PIN = true;
 		BYTE* nextPDATA = nextPage->pBlock;
 		uint InnerOffset = nextNode - nextPage->getBlockOffset ();
@@ -213,8 +215,8 @@ uint BufferManager::getFreeNode (const string & fileName)
 		*(uint*)pData = *(uint*)nextPDATA;
 		//更新过pData，脏页
 		ptr->setDirty ();
-		nextPage->PIN = false;
-		ptr->PIN = false;
+		nextPage->PIN = lastState[1];
+		ptr->PIN = lastState[0];
 		return nextNode;
 	}
 	return 0;
@@ -226,6 +228,7 @@ void BufferManager::AddFreeNode (const string & fileName, uint offset)
 	if (ptr) {
 		Page* nextPage = getPage (fileName, IndexInfo (offset));
 		if (!nextPage)throw new exception ("Unknown Exception");
+		bool lastState[2] = { ptr->PIN, nextPage->PIN };
 		nextPage->PIN = true;
 		ptr->PIN = true;
 		BYTE* pData = ptr->pBlock;
@@ -242,36 +245,43 @@ void BufferManager::AddFreeNode (const string & fileName, uint offset)
 		//设置脏页
 		ptr->setDirty ();
 		nextPage->setDirty ();
-		nextPage->PIN = false;
-		ptr->PIN = false;
+		nextPage->PIN = lastState[1];
+		ptr->PIN = lastState[0];
 	}
 }
 
-void BufferManager::readRawData (const string & fileName, const IndexInfo & info, BYTE * result)
+bool BufferManager::readRawData (const string & fileName, const IndexInfo & info, BYTE * result)
 {
 	uint baseOffset = (info._fileOffset >> 13) << 13;
 	Page* ptr = getPage (fileName, info);
+	if (!ptr || !result)return false;
+	bool lastState = ptr->PIN;
 	ptr->PIN = true;
 	BYTE* pData = ptr->pBlock;
 	pData += info._fileOffset - baseOffset;
 	memcpy_s (result, info._size, pData, info._size);
-	ptr->PIN = false;
-
+	ptr->PIN = lastState;
+	return true;
 }
 
 void BufferManager::WriteRawData (const string & fileName, const IndexInfo & info, const BYTE * pData)
 {
+	bool editFile = IsFileExist (fileName);
+	BYTE tmp[16] = { 0 };
 	uint baseOffset = (info._fileOffset >> 13) << 13;
 	Page * ptr = getPage(fileName, info);
+	bool lastState = ptr->PIN;
 	ptr->PIN = true;
-	ptr->setDirty ();
 	BYTE* dst = ptr->pBlock;
+	if (editFile && !baseOffset)memcpy_s (tmp, 16, dst, 16);
+	ptr->setDirty ();
 	dst += info._fileOffset - baseOffset;
 	memcpy_s (dst, info._size, pData, info._size);
-	ptr->PIN = false;
+	if (editFile && !baseOffset)memcpy_s (dst, 16, tmp, 16);
+	ptr->PIN = lastState;
 }
 
-const IndexInfo BufferManager::createBlock (const string & fileName, uint size = 0)
+const IndexInfo BufferManager::createBlock (const string & fileName, uint size)
 {
 	Page* ptr = getPage (fileName, IndexInfo ());
 	if (ptr) {
@@ -283,7 +293,7 @@ const IndexInfo BufferManager::createBlock (const string & fileName, uint size =
 			if (!nextFreeNodeOffset) {
 				//无freenode，追加写入
 				ofstream fs (fileName, ios::app);
-				uint offset = fs.tellp();
+				uint offset = (uint)fs.tellp();
 				if (fs) {
 					BYTE* emptyPage = new BYTE[Page::_pageSize];
 					fs.write (emptyPage, Page::_pageSize);
@@ -316,7 +326,7 @@ const IndexInfo BufferManager::createBlock (const string & fileName, uint size =
 		//刷新缓冲区，接下来可以使用getPage了
 		fs.close ();
 		fs.open (fileName);
-		uint offset = fs.tellp ();
+		uint offset = (uint)fs.tellp ();
 		BYTE* emptyPage = new BYTE[Page::_pageSize];
 		fs.write (emptyPage, Page::_pageSize);
 		delete emptyPage;
@@ -343,4 +353,15 @@ void BufferManager::drop (const string & fileName)
 	buffer.drop (fileName);
 	BufferIndex.erase (fileName);
 	remove (fileName.c_str ());
+}
+
+bool BufferManager::IsFileExist (const string & fileName)
+{
+	return (bool)ifstream (fileName);
+}
+
+void BufferManager::setPageState (const string & fileName, const IndexInfo & info, bool state)
+{
+	Page* ptr = getPage (fileName, info);
+	ptr->PIN = state;
 }
