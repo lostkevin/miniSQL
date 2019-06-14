@@ -6,6 +6,8 @@
 
 Key是string时需要传入大小，包括字符串的终止符
 
+调用接口前后均保证IndexManager内不保存任何节点
+
 #### How To Create a Index
 
 > 首先用一个空文件 实例化Index Manager

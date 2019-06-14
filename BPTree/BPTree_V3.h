@@ -35,7 +35,7 @@ public:
 	uint getSize () { return _size };
 	uint getOrder () { return _order; }
 	//∑∂Œß≤È—Ø
-	vector<IndexInfo> find (_KTy min, _KTy max);
+	void find (_KTy min, _KTy max, vector<IndexInfo>& result);
 	bool getDirtyState () {
 		return IsDirty;
 	}

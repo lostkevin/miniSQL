@@ -363,5 +363,5 @@ bool BufferManager::IsFileExist (const string & fileName)
 void BufferManager::setPageState (const string & fileName, const IndexInfo & info, bool state)
 {
 	Page* ptr = getPage (fileName, info);
-	ptr->PIN = state;
+	if (ptr)ptr->PIN = state;
 }

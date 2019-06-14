@@ -163,20 +163,6 @@ void IndexManager::close ()
 
 void IndexManager::dropIndex ()
 {
-	switch (type) {
-	case INT: {
-		ITree->dropIndex ();
-		break;
-	}
-	case FLOAT: {
-		FTree->dropIndex ();
-		break;
-	}
-	case STRING: {
-		CTree->dropIndex ();
-		break;
-	}
-	}
 	IOManager.drop ();
 	type = UNDEF;
 	ITree = nullptr;
@@ -271,6 +257,7 @@ inline bool IndexManager::erase (const _Ty & key)
 
 bool IndexManager::BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
 {
+	bufferMgr.setPageState (fileName, info, true);
 	return bufferMgr.readRawData (fileName, info, rawData);
 }
 
@@ -279,6 +266,7 @@ bool IndexManager::BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&
 	ofstream fs (fileName);
 	if (!fs)return false;
 	fs.close ();
+	bufferMgr.setPageState (fileName, info, false);
 	bufferMgr.WriteRawData (fileName, info, rawData);
 }
 
@@ -296,4 +284,9 @@ bool IndexManager::BufferIO::open (const string & fileName)
 {
 	this->fileName = fileName;
 	return bufferMgr.IsFileExist (fileName);
+}
+
+void IndexManager::BufferIO::release (const IndexInfo & info)
+{
+	bufferMgr.setPageState (fileName, info, false);
 }
