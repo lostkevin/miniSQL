@@ -28,8 +28,10 @@ Key是string时需要传入大小，包括字符串的终止符
 每个Node则保存以下信息 (if not deleted) 
 + Parent sizeof(IndexInfo)
 + LSib, RSib 2 * sizeof(IndexInfo)
-+ KeySize [int, float]:4 [string]:size() sizeof(uint)
-+ 0x30 - Key - Index对：sizeof(IndexInfo) + value(KeySize)
++ PairSize sizeof(uint)
++ size sizeof(uint)  Node含有几个子索引
++ NodeType sizeof(NodeType)
++ 0x100 - Key - Index对：sizeof(IndexInfo) + value(KeySize)
 
 #### 模块功能
 

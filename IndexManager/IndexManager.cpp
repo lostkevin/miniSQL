@@ -5,7 +5,7 @@
 uint IndexManager::calcOrder ( uint KeySize)
 {
 	uint pairSize = sizeof (IndexInfo) + KeySize;
-	uint freeSize = PAGE_SIZE - 3 * sizeof(IndexInfo) - sizeof (uint);
+	uint freeSize = PAGE_SIZE - 3 * sizeof(IndexInfo) - sizeof (uint) - sizeof(NodeType);
 	return freeSize / pairSize - 1;
 }
 
@@ -25,17 +25,17 @@ bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 	*(TreeTYPE*)ptr = this->type = type;
 	switch (type) {
 	case INT: {
-		ITree = new Index<int> ();
+		ITree = new Index<int> (IOManager);
 		if (keySize != 4)throw new exception ("incorrect size");
 		break;
 	}
 	case FLOAT: {
-		FTree = new Index<float> ();
+		FTree = new Index<float> (IOManager);
 		if (keySize != 4)throw new exception ("incorrect size");
 		break;
 	}
 	case STRING: {
-		CTree = new Index<string> ();
+		CTree = new Index<string> (IOManager);
 		if (keySize  <= 1 || keySize > 256)throw new exception ("incorrect size");
 		break;
 	}
@@ -48,7 +48,7 @@ bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 	return true;
 }
 
-IndexManager::IndexManager (BufferManager & bufferMgr):IOManager (bufferMgr) 
+IndexManager::IndexManager (BufferManager & bufferMgr):IOManager (bufferMgr)
 {
 	type = UNDEF;
 	ITree = nullptr;
@@ -65,15 +65,15 @@ IndexManager::IndexManager (const string & fileName, BufferManager & bufferMgr):
 		type = *(TreeTYPE*)ptr;
 		switch (type) {
 		case INT: {
-			ITree = new Index<int> ();
+			ITree = new Index<int> (IOManager);
 			break;
 		}
 		case FLOAT: {
-			FTree = new Index<float>();
+			FTree = new Index<float>(IOManager);
 			break;
 		}
 		case STRING: {
-			CTree = new Index<string>();
+			CTree = new Index<string>(IOManager);
 			break;
 		}
 		default:
@@ -116,15 +116,15 @@ bool IndexManager::open (const string & fileName)
 		type = *(TreeTYPE*)ptr;
 		switch (type) {
 		case INT: {
-			ITree = new Index<int> ();
+			ITree = new Index<int> (IOManager);
 			break;
 		}
 		case FLOAT: {
-			FTree = new Index<float> ();
+			FTree = new Index<float> (IOManager);
 			break;
 		}
 		case STRING: {
-			CTree = new Index<string> ();
+			CTree = new Index<string> (IOManager);
 			break;
 		}
 		default:
@@ -255,38 +255,54 @@ inline bool IndexManager::erase (const _Ty & key)
 	}
 }
 
-bool IndexManager::BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
+bool BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
 {
 	bufferMgr.setPageState (fileName, info, true);
 	return bufferMgr.readRawData (fileName, info, rawData);
 }
 
-bool IndexManager::BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&rawData)[PAGE_SIZE])
+bool BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&rawData)[PAGE_SIZE])
 {
 	ofstream fs (fileName);
 	if (!fs)return false;
 	fs.close ();
 	bufferMgr.setPageState (fileName, info, false);
 	bufferMgr.WriteRawData (fileName, info, rawData);
+	return true;
 }
 
-void IndexManager::BufferIO::drop ()
+const IndexInfo BufferIO::NewPage ()
+{
+	if (!bufferMgr.IsFileExist (fileName)){
+		ofstream fs (fileName);
+		if (!fs)throw new exception ("Incorrect FileName");
+		fs.close ();
+	}
+	return bufferMgr.createBlock (fileName, PAGE_SIZE);
+}
+
+void BufferIO::erase (const IndexInfo & info)
+{
+	bufferMgr.erase(fileName, info);
+}
+
+void BufferIO::drop ()
 {
 	bufferMgr.drop (fileName);
 }
 
-void IndexManager::BufferIO::close ()
+void BufferIO::close ()
 {
 	fileName = string ();
 }
 
-bool IndexManager::BufferIO::open (const string & fileName)
+bool BufferIO::open (const string & fileName)
 {
 	this->fileName = fileName;
 	return bufferMgr.IsFileExist (fileName);
 }
 
-void IndexManager::BufferIO::release (const IndexInfo & info)
+void BufferIO::release (const IndexInfo & info)
 {
 	bufferMgr.setPageState (fileName, info, false);
 }

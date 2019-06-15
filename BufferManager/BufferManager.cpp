@@ -2,6 +2,16 @@
 #include "BufferManager.h"
 using namespace std;
 
+uint BufferManager::getFileSize (const string& fileName) {
+	ifstream fin (fileName);
+	fin.seekg (0, ios::end);
+	uint tmp = (uint)fin.tellg ();
+	if (tmp % 8192)throw new exception ("Error!");
+	fin.close ();
+	return tmp;
+}
+
+
 BufferManager::Buffer::Buffer ()
 {
 	size = 0;
@@ -10,7 +20,9 @@ BufferManager::Buffer::Buffer ()
 BufferManager::Buffer::~Buffer ()
 {
 	//BufferManager生存期结束，将所有page写回磁盘
-	for (uint i = 1; i <= size; i++)minHeap[i]->~Page ();
+	for (uint i = 1; i <= size; i++) {
+		minHeap[i]->~Page ();
+	}
 }
 
 bool BufferManager::Buffer::Enque (Page * page)
@@ -105,12 +117,15 @@ BufferManager::Page::Page (const string &fileName, uint blockOffset)
 	this->IsDirty = false;
 	this->PIN = false;
 
-	this->pBlock = new BYTE[this->_pageSize];
+	this->pBlock = new BYTE[this->_pageSize]{ 0 };
 	ifstream fs (fileName, ios::binary);
 	if (fs) {
 		fs.seekg (blockOffset);
 		fs.read (this->pBlock, this->_pageSize);
-		if (fs.gcount () < this->_pageSize)throw new exception ("Load Page Failed");
+		uint readSize = (uint)fs.gcount ();
+		if (readSize < this->_pageSize) {
+			throw new exception ("Load Page Failed");
+		}
 	}
 	else {
 		//file not exist, do nothing 
@@ -121,7 +136,7 @@ BufferManager::Page::Page (const string &fileName, uint blockOffset)
 BufferManager::Page::~Page ()
 {
 	if (this->IsDirty) {
-		ofstream fs (fileName, ios::binary);
+		fstream fs (fileName, ios::in|ios::out|ios::binary);
 		if (fs) {
 			fs.seekp (this->blockOffset);
 			fs.write (this->pBlock, this->_pageSize);
@@ -140,15 +155,16 @@ uint BufferManager::ROUND (uint blockSize)
 	blockSize |= blockSize >> 2;
 	blockSize |= blockSize >> 4;
 	blockSize |= blockSize >> 8;
-	blockSize++; //这样对2^16以内的blockSize都能正确计算,对于对齐任务足够了(8192 = 2^13)
+	blockSize |= blockSize >> 16;
+	blockSize++; 
 	return blockSize;
 }
 
 bool BufferManager::Load (const string & fileName, const IndexInfo &info)
 {
 	if (info._fileOffset & 0x00001FFF)return false;
-	Page* ptr = new(std::nothrow) Page (fileName, info._fileOffset);
-	if (ptr) {
+	if (this->IsFileExist (fileName)) {
+		Page* ptr = new Page (fileName, info._fileOffset);
 		if (buffer.size == buffer.maxSize) {
 			if (Page* ptr = buffer.Deque ()) {
 				BufferIndex[ptr->getFileName ()].erase (ptr->getBlockOffset ());
@@ -172,7 +188,6 @@ BufferManager::Page * BufferManager::getPage (const string & fileName, const Ind
 	if (iter != BufferIndex.end ()) {
 		auto innerIter = iter->second.find (baseOffset);
 		if (innerIter != iter->second.end ()) return innerIter->second;
-		
 	}
 	if (Load (fileName, IndexInfo (baseOffset))) {
 		return BufferIndex[fileName][baseOffset];
@@ -237,7 +252,7 @@ void BufferManager::AddFreeNode (const string & fileName, uint offset)
 		uint nextNode = *(uint*)pData;
 		//维护freelist，读入buffer的页
 		BYTE* nextPDATA = nextPage->pBlock;
-		uint InnerOffset = nextNode - nextPage->getBlockOffset ();
+		uint InnerOffset = offset - nextPage->getBlockOffset ();
 		//移动指针
 		nextPDATA += 8 + InnerOffset;
 		*(uint*)pData = offset;
@@ -292,10 +307,11 @@ const IndexInfo BufferManager::createBlock (const string & fileName, uint size)
 			//当文件头保存着size时，不使用传入的参数
 			if (!nextFreeNodeOffset) {
 				//无freenode，追加写入
-				ofstream fs (fileName, ios::app);
-				uint offset = (uint)fs.tellp();
+				uint offset = getFileSize (fileName);
+				ofstream fs (fileName, ios::app | ios::binary);
 				if (fs) {
-					BYTE* emptyPage = new BYTE[Page::_pageSize];
+					BYTE* emptyPage = new BYTE[Page::_pageSize]{ 0 };
+					emptyPage[Page::_pageSize - 1] = (BYTE)0xff;
 					fs.write (emptyPage, Page::_pageSize);
 					delete emptyPage;
 				}
@@ -316,8 +332,8 @@ const IndexInfo BufferManager::createBlock (const string & fileName, uint size)
 	if(size){
 		ofstream fs (fileName);
 		if (fs) {
-			uint offset = 0;
-			BYTE* header = new BYTE[Page::_pageSize];
+			BYTE* header = new BYTE[Page::_pageSize]{ 0 };
+			header[Page::_pageSize - 1] = (BYTE)0xff;
 			*(uint*)header = size;
 			fs.write (header, Page::_pageSize);
 			delete header;
@@ -325,9 +341,10 @@ const IndexInfo BufferManager::createBlock (const string & fileName, uint size)
 		else throw new exception ("Incorrect File Name!");
 		//刷新缓冲区，接下来可以使用getPage了
 		fs.close ();
-		fs.open (fileName);
-		uint offset = (uint)fs.tellp ();
-		BYTE* emptyPage = new BYTE[Page::_pageSize];
+		uint offset = getFileSize (fileName);
+		fs.open (fileName, ios::app);
+		BYTE* emptyPage = new BYTE[Page::_pageSize]{ 0 };
+		emptyPage[Page::_pageSize - 1] = (BYTE)0xff;
 		fs.write (emptyPage, Page::_pageSize);
 		delete emptyPage;
 		fs.close ();
@@ -365,3 +382,4 @@ void BufferManager::setPageState (const string & fileName, const IndexInfo & inf
 	Page* ptr = getPage (fileName, info);
 	if (ptr)ptr->PIN = state;
 }
+

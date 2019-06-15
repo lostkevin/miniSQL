@@ -54,13 +54,14 @@ private:
 	};
 	//块大小是BLOCK_SIZE，将所有数据块对齐到2^k,块大于BLOCK_SIZE时抛异常
 	//大程要求一个tuple的size至多为8192 （256*32），因此缓冲页必须8K
-	uint ROUND (uint blockSize);
+	static uint ROUND (uint blockSize);
+	static uint getFileSize (const string& fileName);
 	//缓冲区
 	Buffer buffer;
 	map<string, map<uint, Page*>> BufferIndex;
-	//从disk中读取一个page到buffer中，自动保存被替换的page, 读取成功返回true
+	//从disk中读取一个page到buffer中，自动保存被替换的page, 读取成功返回true，文件不存在返回false
 	bool Load (const string &fileName, const IndexInfo &info);
-	//读取该IndexInfo的offset所在的Page
+	//读取该IndexInfo的offset所在的Page，文件不存在返回nullptr
 	Page* getPage (const string &fileName, const IndexInfo &info);
 	uint getFileBlockSize (const string & fileName);
 	//向freelist中取出节点
@@ -68,11 +69,17 @@ private:
 	//向freelist中添加数据
 	void AddFreeNode (const string & fileName, uint offset);
 public:
+	BufferManager () {
+
+	}
 	//读取某个数据块的信息，将信息写到result指针指向的内存, 如果读取失败，返回false
 	bool readRawData (const string& fileName, const IndexInfo &info, BYTE * result);
-	//向indexinfo指向的位置写入size字节, 数据源为pData，若数据不在buffer中，需要读入
+	//向indexinfo指向的位置写入size字节, 数据源为pData,若文件不存在，要求
 	void WriteRawData (const string& fileName, const IndexInfo &info, const BYTE * pData);
 	//新建一个块，size为该数据块的大小，为0时使用文件头设置（=0时文件不存在抛异常）
+	//文件不存在将检查size是否被设置，如果非零将顺便新建一个块大小为该值的文件。
+	//若文件名不正确，抛异常
+	//此后可以使用getPage
 	const IndexInfo createBlock (const string & fileName, uint size = 0);
 	//删除某个块的数据，即将这个块加入到freelist内
 	//如果文件不存在，什么都不做
@@ -81,6 +88,7 @@ public:
 	void drop (const string & fileName);
 	//判断文件是否存在
 	bool IsFileExist (const string& fileName);
+	//将某Page加载到buffer中并使他的Pin=给定值
 	void setPageState (const string &fileName, const IndexInfo &info, bool state);
 };
 

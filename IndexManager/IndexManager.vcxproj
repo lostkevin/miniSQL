@@ -119,6 +119,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IndexManager.cpp" />
+    <ClCompile Include="Test_IndexMgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.md" />

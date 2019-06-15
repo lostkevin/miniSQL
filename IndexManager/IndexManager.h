@@ -1,6 +1,6 @@
 #pragma once
 #include <map>
-#include "..\miniSQL\Commonheader.h"
+#include <vector>
 #include "..\BPTree\BPTree_V3.h"
 #include "..\BufferManager\BufferManager.h"
 
@@ -11,7 +11,7 @@ enum TreeTYPE {
 	STRING
 };
 
-static struct BasicInfo {
+struct BasicInfo {
 	TreeTYPE type;
 	uint KeySize;
 	uint order;
@@ -37,7 +37,7 @@ public:
 	bool ReadRawData (const IndexInfo&, BYTE (&rawData)[PAGE_SIZE]);
 	bool WriteRawData (const IndexInfo&, const BYTE (&rawData)[PAGE_SIZE]);
 	const IndexInfo NewPage ();
-	bool erase (const IndexInfo &);
+	void erase (const IndexInfo &);
 	void drop ();
 	void close ();
 	//打开一个文件，若文件存在，返回true，否则返回false
@@ -65,13 +65,46 @@ class Index {
 		}
 		nodesActive.clear ();
 	}
-	//将BYTE*的数据转换成node
-	BPlusNode<_KTy> ToNode (const BYTE (&rawData)[PAGE_SIZE]) {
-
+	//将BYTE*的数据转换成node,得到的node不应是左值
+	const BPlusNode<_KTy> ToNode (const BYTE (&rawData)[PAGE_SIZE]) {
+		BPlusNode<_KTy> tmp = InitialNode();
+		const BYTE* ptr = rawData;
+		tmp.Parent = *(IndexInfo*)ptr;
+		ptr += sizeof (IndexInfo);
+		tmp.LIndex = *(IndexInfo*)ptr;
+		ptr += sizeof (IndexInfo);
+		tmp.RIndex = *(IndexInfo*)ptr;
+		ptr += sizeof (IndexInfo);
+		uint PairSize = *(uint*)ptr;
+		ptr += sizeof (uint);
+		tmp.size = *(uint*)ptr;
+		ptr += sizeof (uint);
+		tmp.type = *(NodeType*)ptr;
+		ptr = rawData;
+		tmp.Index = new IndexInfo[tmp.getOrder () + 1];
+		for (uint i = 0; i < tmp.size; i++) {	
+			tmp.Index[i] = *(Pair<_KTy>*)(ptr + 0x100 + i * PairSize);
+		}
+		return tmp;
 	}
 
-	void saveNode (const BPlusNode<_KTy>, const BYTE (&rawData)[PAGE_SIZE]) {
-
+	void saveNode (const BPlusNode<_KTy>& Node, BYTE (&rawData)[PAGE_SIZE]) {
+		BYTE* ptr = rawData;
+		*(IndexInfo*)ptr = Node.Parent;
+		ptr += sizeof (IndexInfo);
+		*(IndexInfo*)ptr = Node.LIndex;
+		ptr += sizeof (IndexInfo);
+		*(IndexInfo*)ptr = Node.RIndex;
+		ptr += sizeof (IndexInfo);
+		*(uint*)ptr = sizeof (Pair);
+		ptr += sizeof (uint);
+		*(uint*)ptr = Node.size;
+		ptr += sizeof (uint);
+		*(NodeType*)ptr = Node.type;
+		ptr = rawData;
+		for (uint i = 0; i < Node.size; i++) {
+			*(Pair<_KTy>*)Node = Node.Index[i];
+		}
 	}
 
 	//将info指向的node加入到活动节点列表，并返回一个指向这个node的指针
@@ -84,7 +117,8 @@ class Index {
 		else {
 			BYTE rawData[PAGE_SIZE] = { 0 };
 			if (IOManager.ReadRawData (info, rawData)) {
-				nodesActive[info] = getNode (rawData);
+				nodesActive[info] = ToNode (rawData);
+				nodesActive[info].thisPos = info;
 				return &nodesActive[info];
 			}
 			else return nullptr;
@@ -98,6 +132,7 @@ class Index {
 		IndexInfo newNodeInfo = IOManager.NewPage ();
 		//绑定Info，初始化Node,这个node是dirty的
 		nodesActive[newNodeInfo] = InitialNode ();
+		nodesActive[newNodeInfo].thisPos = newNodeInfo;
 	}
 
 	BPlusNode<_KTy> InitialNode () {
@@ -135,7 +170,7 @@ class Index {
 	//加载失败的话将导致一个未定义的索引
 	const IndexInfo getRootInfo () {
 		BYTE header[PAGE_SIZE];
-		IOManager.ReadRawData (IndexInfo (), header)
+		IOManager.ReadRawData (IndexInfo (), header);
 		BYTE* ptr = header;
 		ptr += 16 + sizeof (TreeTYPE) + sizeof (uint) + sizeof (uint);
 		IndexInfo rootInfo = *(IndexInfo*)ptr;
@@ -186,7 +221,10 @@ public:
 			tmp->Index[0].key = key;
 			tmp->Index[0].info = data;
 			setRootInfo (nullNode);
-		}else Root->insert (key, data);
+		}
+		else {
+			Root->Search (key)->insert (key, data);
+		}
 		//如果root有rsibling时，新建一个节点作为根，将root及其Rsibling作为新根的子节点
 		if (Root->RIndex) {
 			IndexInfo nullNode = GetNewNode ();
@@ -241,7 +279,6 @@ public:
 	bool fail ();
 	BufferIO IOManager;
 	TreeTYPE type;
-
 	//设置索引基本信息，keyType = string时keysize = size()
 	bool setIndexInfo (TreeTYPE type, uint keySize = 4);
 	IndexManager (BufferManager& bufferMgr);

@@ -23,6 +23,9 @@
     <ClCompile Include="IndexManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Test_IndexMgr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.md" />
