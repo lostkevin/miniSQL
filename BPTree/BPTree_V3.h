@@ -203,14 +203,14 @@ public:
 				}
 				else {
 					this->index[0] = LNode->index[LNode->size - 1];
-					outer->GetNodePtr (LNode->index[LNode->size - 1])->IsDirty = true;
-					outer->GetNodePtr (LNode->index[LNode->size - 1])->Parent = thisPos;
+					outer->GetNodePtr (LNode->index[LNode->size - 1].info)->IsDirty = true;
+					outer->GetNodePtr (LNode->index[LNode->size - 1].info)->Parent = thisPos;
 					LNode->index[LNode->size - 1] = Pair ();
 					int i = 0;
 					NodePtr parentPtr = outer->GetNodePtr (this->Parent);
 					for (; parentPtr->index[i].info != this->LIndex; i++);
 					this->index[0].key = parentPtr->index[i].key;
-					parentPtr->updateKey (this->index[0].key, LNode->index[LNode->size - 2]);
+					parentPtr->updateKey (this->index[0].key, LNode->index[LNode->size - 2].key);
 				}
 				LNode->size--;
 				this->size++;
@@ -220,7 +220,7 @@ public:
 				//从右兄弟取一个节点过来，右兄弟需更新key
 				//本节点不用更新
 				RNode->IsDirty = true;
-				if (this->Type == LEAF) {
+				if (this->type == LEAF) {
 					this->index[this->size] = RNode->index[0];
 					RNode->index[0] = Pair ();
 					outer->GetNodePtr (Parent)->updateKey (RNode->index[0].key, RNode->index[1].key);
@@ -267,7 +267,7 @@ public:
 						LL->IsDirty = true;
 						LL->RIndex = thisPos;
 					}
-					this->index = LNode->LIndex;
+					this->LIndex = LNode->LIndex;
 				}
 				else if (RNode && RNode->Parent == this->Parent) {
 					uint i = 0;
@@ -280,8 +280,8 @@ public:
 					for (uint i = 0; i < this->size; i++) {
 						RNode->index[i] = this->index[i];
 						if (this->type == NONLEAF) {
-							outer->GetNodePtr (this->index[i].info)->IsDirty = true;
-							outer->GetNodePtr (this->index[i].info)->Parent = RNode;
+							(outer->GetNodePtr (this->index[i].info))->IsDirty = true;
+							(outer->GetNodePtr (this->index[i].info))->Parent = RNode->thisPos;
 						}
 						this->index[i] = Pair ();
 					}
@@ -293,7 +293,7 @@ public:
 				}
 				else {
 					//都不可以合并，说明该节点的父亲节点若存在，仅有一个儿子，这种情况仅出现在该节点为根
-					if (this->Parent)throw new std::exception ("This node is not a root!");
+					if (outer->GetNodePtr(this->Parent))throw new std::exception ("This node is not a root!");
 					//根的修改需要交给外部完成，若this->size!=0,外部不需要做任何操作,否则释放内存并初始化root=nullptr
 					return true;
 				}

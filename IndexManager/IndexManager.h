@@ -1,4 +1,5 @@
 #pragma once
+#define DEBUG
 #include <map>
 #include <vector>
 #include "..\BPTree\BPTree_V3.h"
@@ -183,6 +184,20 @@ class Index {
 		IOManager.erase (info);
 	}
 	friend class BPlusNode<_KTy>;
+#ifdef DEBUG
+	uint examineNode (const IndexInfo &node) {
+		//检查当前节点数据是否正确
+		uint nodesize = 1;
+		BPlusNode<_KTy>* ptr = GetNodePtr (node);
+		if (ptr->type == LEAF)return nodesize;
+		else if (ptr->type != NONLEAF)throw new exception ();
+		for (uint i = 0; i < ptr->size; i++) {
+			nodesize += examineNode (ptr->index[i].info);
+		}
+		return nodesize;
+	}
+#endif // DEBUG
+
 public:
 	Index (BufferIO& bufferMgr) :IOManager (bufferMgr) {
 	}
@@ -254,16 +269,24 @@ public:
 		bool flag = Root->erase (key);
 		if (!flag)return false;
 		//删除后可能使root的size=1，此时释放原来的根节点并更新根的位置
-		if (Root->getSize () == 1) {
+		if (Root->size == 1) {
 			setRootInfo (Root->index[0].info);
 			IOManager.erase (rootInfo);
 		}
-		else if (!Root->getSize ()) {
+		else if (!Root->size) {
 			setRootInfo (IndexInfo ());
 			IOManager.erase (rootInfo);
 		}
 		return true;
 	}
+
+#ifdef DEBUG
+	uint examine () {
+		IndexInfo root = getRootInfo ();
+		return examineNode (root);
+	}
+#endif // DEBUG
+
 };
 
 //保证每个node占用一个disk page，增加IO速度
@@ -294,9 +317,29 @@ public:
 	template<typename _KTy> const IndexInfo find (_KTy key);
 	//修改索引的相关方法
 	//插入,用于建立新index,若key重复将会更新索引，这里将会抛出异常
-	template<typename _KTy> void insert (const _KTy &key, const IndexInfo & data);
+	template<typename _KTy> void insert (const _KTy &key, const IndexInfo & data){}
 	//删除，若key不存在返回false, 删除成功返回true,否则抛异常
 	template<typename _KTy> bool erase (const _KTy &key);
+
+#ifdef DEBUG
+	uint examine () {
+		//检查文件是否完好，并返回文件中的节点数
+		if (setIndexInfo (INT))return 0;
+		switch (type) {
+		case INT: {
+			return ITree->examine ();
+		}
+		case FLOAT: {
+			return FTree->examine ();
+		}
+		case STRING: {
+			return CTree->examine ();
+		}
+		}
+		return 0;
+	}
+#endif // DEBUG
+
 };
 
 
@@ -306,14 +349,48 @@ inline const IndexInfo IndexManager::find (_KTy key)
 {
 	switch (type) {
 	case INT: {
-		static_assert(!Conversion<_KTy, int>::state, "Key Type Incorrect!");
 		return ITree->find (key);
 	}
 	case FLOAT: {
-		static_assert(!Conversion<_KTy, float>::state, "Key Type Incorrect!");
 		return FTree->find (key);
 	}
 	case STRING: {
+		return CTree->find (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline const IndexInfo IndexManager::find (int key)
+{
+	switch (type) {
+	case INT: {
+		return ITree->find (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline const IndexInfo IndexManager::find (float key)
+{
+	switch (type) {
+	case FLOAT: {
+		return FTree->find (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline const IndexInfo IndexManager::find (string key)
+{
+	switch (type) {
+	case INT: {
 		return CTree->find (key);
 	}
 	default:
@@ -384,17 +461,40 @@ inline void IndexManager::insert (const string &key, const IndexInfo & data)
 template<typename _KTy>
 inline bool IndexManager::erase (const _KTy & key)
 {
+	throw new exception ("NullIndexException");
+	
+}
+
+
+template<>
+inline bool IndexManager::erase (const int & key)
+{
 	switch (type) {
 	case INT: {
-		static_assert(!Conversion<_KTy, int>::state, "Key Type Incorrect!");
 		return ITree->erase (key);
 	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline bool IndexManager::erase (const float & key)
+{
+	switch (type) {
 	case FLOAT: {
-		static_assert(!Conversion<_KTy, float>::state, "Key Type Incorrect!");
 		return FTree->erase (key);
 	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline bool IndexManager::erase (const string & key)
+{
+	switch (type) {
 	case STRING: {
-		static_assert(!Conversion<_KTy, string>::state, "Key Type Incorrect!");
 		return CTree->erase (key);
 	}
 	default:

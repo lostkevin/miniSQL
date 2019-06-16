@@ -4,8 +4,12 @@
 
 uint IndexManager::calcOrder ( uint KeySize)
 {
+#ifdef DEBUG
+	//return 4;
+#endif // DEBUG
+
 	uint pairSize = sizeof (IndexInfo) + KeySize;
-	uint freeSize = PAGE_SIZE - 3 * sizeof(IndexInfo) - sizeof (uint) - sizeof(NodeType);
+	uint freeSize = PAGE_SIZE - 0x100;
 	return freeSize / pairSize - 1;
 }
 

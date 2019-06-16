@@ -41,6 +41,12 @@ public:
 	bool operator < (const IndexInfo& r) const{
 		return this->_fileOffset < r._fileOffset;
 	}
+
+	bool operator == (const IndexInfo& r)const {
+		return this->_fileOffset == r._fileOffset && this->_size == r._size;
+	}
+
+	bool operator != (const IndexInfo& r)const { return !(*this == r); }
 };
 
 //测试两个类型是否可以转换
