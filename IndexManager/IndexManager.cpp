@@ -16,8 +16,10 @@ bool IndexManager::fail ()
 
 bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 {
+	IndexInfo newPage = IOManager.NewPage ();
+	IOManager.erase (newPage);
 	if(this->type != UNDEF || type == UNDEF)return false;
-	BYTE header[PAGE_SIZE];
+	BYTE header[PAGE_SIZE] = { 0 };
 	BYTE* ptr = header;
 	*(uint*)ptr = PAGE_SIZE;
 	ptr += 16;
@@ -168,93 +170,6 @@ void IndexManager::dropIndex ()
 	ITree = nullptr;
 }
 
-template<typename _Ty>
-inline const IndexInfo IndexManager::find (_Ty key)
-{
-	switch (type) {
-	case INT: {
-		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
-		return ITree->find (key);
-	}
-	case FLOAT: {
-		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
-		return FTree->find (key);
-	}
-	case STRING: {
-		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
-		return CTree->find (key);
-	}
-	default:
-		throw new exception ("NullIndexException");
-	}
-}
-
-template<typename _Ty>
-inline const vector<IndexInfo> IndexManager::find (_Ty min, _Ty max)
-{
-	switch (type) {
-	case INT: {
-		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
-		return ITree->find (min, max);
-	}
-	case FLOAT: {
-		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
-		return FTree->find (min, max);
-	}
-	case STRING: {
-		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
-		return CTree->find (min, max);
-	}
-	default:
-		throw new exception ("NullIndexException");
-	}
-}
-
-template<typename _Ty>
-inline void IndexManager::insert (const _Ty & key, const IndexInfo & data)
-{
-	switch (type) {
-	case INT: {
-		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
-		ITree->insert (key, data);
-		break;
-	}
-	case FLOAT: {
-		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
-		FTree->insert (key, data);
-		break;
-	}
-	case STRING: {
-		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
-		CTree->insert (key, data);
-		break;
-	}
-	default:
-		throw new exception ("NullIndexException");
-	}
-}
-
-template<typename _Ty>
-inline bool IndexManager::erase (const _Ty & key)
-{
-	switch (type) {
-	case INT: {
-		static_assert(!Conversion<_Ty, int>::state, "Key Type Incorrect!");
-		return ITree->erase (key);
-	}
-	case FLOAT: {
-		static_assert(!Conversion<_Ty, float>::state, "Key Type Incorrect!");
-		return FTree->erase (key);
-	}
-	case STRING: {
-		static_assert(!Conversion<_Ty, string>::state, "Key Type Incorrect!");
-		return CTree->erase (key);
-	}
-	default:
-		throw new exception ("NullIndexException");
-	}
-}
-
 bool BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
 {
 	bufferMgr.setPageState (fileName, info, true);
@@ -263,7 +178,7 @@ bool BufferIO::ReadRawData (const IndexInfo & info, BYTE (&rawData)[PAGE_SIZE])
 
 bool BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&rawData)[PAGE_SIZE])
 {
-	ofstream fs (fileName);
+	fstream fs (fileName, ios::in | ios::out | ios::binary);
 	if (!fs)return false;
 	fs.close ();
 	bufferMgr.setPageState (fileName, info, false);
@@ -273,11 +188,6 @@ bool BufferIO::WriteRawData (const IndexInfo & info, const BYTE (&rawData)[PAGE_
 
 const IndexInfo BufferIO::NewPage ()
 {
-	if (!bufferMgr.IsFileExist (fileName)){
-		ofstream fs (fileName);
-		if (!fs)throw new exception ("Incorrect FileName");
-		fs.close ();
-	}
 	return bufferMgr.createBlock (fileName, PAGE_SIZE);
 }
 

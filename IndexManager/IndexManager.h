@@ -81,9 +81,8 @@ class Index {
 		ptr += sizeof (uint);
 		tmp.type = *(NodeType*)ptr;
 		ptr = rawData;
-		tmp.Index = new IndexInfo[tmp.getOrder () + 1];
 		for (uint i = 0; i < tmp.size; i++) {	
-			tmp.Index[i] = *(Pair<_KTy>*)(ptr + 0x100 + i * PairSize);
+			tmp.index[i] = *(Pair<_KTy>*)(ptr + 0x100 + i * PairSize);
 		}
 		return tmp;
 	}
@@ -96,14 +95,14 @@ class Index {
 		ptr += sizeof (IndexInfo);
 		*(IndexInfo*)ptr = Node.RIndex;
 		ptr += sizeof (IndexInfo);
-		*(uint*)ptr = sizeof (Pair);
+		*(uint*)ptr = sizeof (Pair<_KTy>);
 		ptr += sizeof (uint);
 		*(uint*)ptr = Node.size;
 		ptr += sizeof (uint);
 		*(NodeType*)ptr = Node.type;
 		ptr = rawData;
 		for (uint i = 0; i < Node.size; i++) {
-			*(Pair<_KTy>*)Node = Node.Index[i];
+			*(Pair<_KTy>*)(ptr + 0x100 + i * sizeof (Pair<_KTy>)) = Node.index[i];
 		}
 	}
 
@@ -133,11 +132,13 @@ class Index {
 		//绑定Info，初始化Node,这个node是dirty的
 		nodesActive[newNodeInfo] = InitialNode ();
 		nodesActive[newNodeInfo].thisPos = newNodeInfo;
+		return newNodeInfo;
 	}
 
 	BPlusNode<_KTy> InitialNode () {
 		getHeader ();
-		return BPlusNode<_KTy> (headerInfo.order, GetNodePtr, GetNewNode, true);
+		BPlusNode<_KTy> tmp (headerInfo.order, this, true);
+		return tmp;
 	}
 
 	//设置根节点信息, 将根节点设置为info指向的节点
@@ -147,7 +148,7 @@ class Index {
 			BYTE* ptr = header;
 			ptr += 16 + sizeof (TreeTYPE) + sizeof (uint) + sizeof (uint);
 			*(IndexInfo*)ptr = info;
-			IOManager.SaveRawData (IndexInfo (), header);
+			IOManager.WriteRawData (IndexInfo (), header);
 		}
 	}
 
@@ -174,16 +175,16 @@ class Index {
 		BYTE* ptr = header;
 		ptr += 16 + sizeof (TreeTYPE) + sizeof (uint) + sizeof (uint);
 		IndexInfo rootInfo = *(IndexInfo*)ptr;
+		return rootInfo;
 	}
 
 	//将info指向的节点加入到freelist中
 	void dropNode (IndexInfo &info) {
 		IOManager.erase (info);
 	}
-
+	friend class BPlusNode<_KTy>;
 public:
 	Index (BufferIO& bufferMgr) :IOManager (bufferMgr) {
-
 	}
 
 	//搜索指定范围的key的indexinfo，结果数=vector.size()
@@ -217,25 +218,26 @@ public:
 		BPlusNode<_KTy> *Root = GetNodePtr (rootInfo);
 		if (!Root) {
 			IndexInfo nullNode = GetNewNode ();
-			BPlusNode<_KTy>* tmp = GetNodePtr (nullNode);
-			tmp->Index[0].key = key;
-			tmp->Index[0].info = data;
+			Root = GetNodePtr (nullNode);
+			Root->index[0].key = key;
+			Root->index[0].info = data;
 			setRootInfo (nullNode);
+			Root->insert (key, data);
 		}
 		else {
 			Root->Search (key)->insert (key, data);
 		}
 		//如果root有rsibling时，新建一个节点作为根，将root及其Rsibling作为新根的子节点
-		if (Root->RIndex) {
+		if (GetNodePtr(Root->RIndex)) {
 			IndexInfo nullNode = GetNewNode ();
 			BPlusNode<_KTy>* tmp = GetNodePtr (nullNode);
 			//当分裂root时，向根插入的index保存在原根的max指针对应的key中
-			tmp->Index[0].key = Root->Index[Root->getSize ()].key;
+			tmp->index[0].key = Root->index[Root->size].key;
 			//清空max指针的key
-			Root->Index[Root->getSize ()].key = _KTy ();
+			Root->index[Root->size].key = _KTy ();
 			//设置子节点索引
-			tmp->Index[0].info = getRootInfo ();
-			tmp->Index[1].info = Root->RIndex;
+			tmp->index[0].info = getRootInfo ();
+			tmp->index[1].info = Root->RIndex;
 			//设置父节点索引
 			Root->Parent = nullNode;
 			GetNodePtr (Root->RIndex)->Parent = nullNode;
@@ -253,7 +255,7 @@ public:
 		if (!flag)return false;
 		//删除后可能使root的size=1，此时释放原来的根节点并更新根的位置
 		if (Root->getSize () == 1) {
-			setRootInfo (Root->Index[0].info);
+			setRootInfo (Root->index[0].info);
 			IOManager.erase (rootInfo);
 		}
 		else if (!Root->getSize ()) {
@@ -269,8 +271,6 @@ class IndexManager {
 private:
 	//根据KeySize计算一个node的order
 	static uint calcOrder (uint KeySize = sizeof(int));
-public:
-	//1个IndexManager实例管理一个索引文件
 	union {
 		Index<int> *ITree;
 		Index<float> *FTree;
@@ -279,6 +279,7 @@ public:
 	bool fail ();
 	BufferIO IOManager;
 	TreeTYPE type;
+public:
 	//设置索引基本信息，keyType = string时keysize = size()
 	bool setIndexInfo (TreeTYPE type, uint keySize = 4);
 	IndexManager (BufferManager& bufferMgr);
@@ -289,13 +290,114 @@ public:
 	bool open (const string& fileName);
 	void close ();
 
-	template<typename _Ty> const vector<IndexInfo> find (_Ty min, _Ty max);
-	template<typename _Ty> const IndexInfo find (_Ty key);
+	template<typename _KTy> const vector<IndexInfo> find (_KTy min, _KTy max);
+	template<typename _KTy> const IndexInfo find (_KTy key);
 	//修改索引的相关方法
 	//插入,用于建立新index,若key重复将会更新索引，这里将会抛出异常
-	template<typename _Ty> void insert (const _Ty &key, const IndexInfo & data);
+	template<typename _KTy> void insert (const _KTy &key, const IndexInfo & data);
 	//删除，若key不存在返回false, 删除成功返回true,否则抛异常
-	template<typename _Ty> bool erase (const _Ty &key);
+	template<typename _KTy> bool erase (const _KTy &key);
 };
 
 
+
+template<typename _KTy>
+inline const IndexInfo IndexManager::find (_KTy key)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_KTy, int>::state, "Key Type Incorrect!");
+		return ITree->find (key);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_KTy, float>::state, "Key Type Incorrect!");
+		return FTree->find (key);
+	}
+	case STRING: {
+		return CTree->find (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<typename _KTy>
+inline const vector<IndexInfo> IndexManager::find (_KTy min, _KTy max)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_KTy, int>::state, "Key Type Incorrect!");
+		return ITree->find (min, max);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_KTy, float>::state, "Key Type Incorrect!");
+		return FTree->find (min, max);
+	}
+	case STRING: {
+		static_assert(!Conversion<_KTy, string>::state, "Key Type Incorrect!");
+		return CTree->find (min, max);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline void IndexManager::insert (const int &key, const IndexInfo & data)
+{
+	switch (type) {
+	case INT: {
+		ITree->insert ((int)key, data);
+		break;
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline void IndexManager::insert (const float &key, const IndexInfo & data)
+{
+	switch (type) {
+	case FLOAT: {
+		FTree->insert ((float)key, data);
+		break;
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<>
+inline void IndexManager::insert (const string &key, const IndexInfo & data)
+{
+	switch (type) {
+	case STRING: {
+		CTree->insert (key, data);
+		break;
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
+template<typename _KTy>
+inline bool IndexManager::erase (const _KTy & key)
+{
+	switch (type) {
+	case INT: {
+		static_assert(!Conversion<_KTy, int>::state, "Key Type Incorrect!");
+		return ITree->erase (key);
+	}
+	case FLOAT: {
+		static_assert(!Conversion<_KTy, float>::state, "Key Type Incorrect!");
+		return FTree->erase (key);
+	}
+	case STRING: {
+		static_assert(!Conversion<_KTy, string>::state, "Key Type Incorrect!");
+		return CTree->erase (key);
+	}
+	default:
+		throw new exception ("NullIndexException");
+	}
+}

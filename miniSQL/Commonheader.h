@@ -21,8 +21,10 @@ private:
 	uint _size;
 	//文件偏移量
 	uint _fileOffset;
-	friend class IndexManager;
+	//friend class IndexManager;
 	friend class BufferManager;
+	friend int main ();
+	template <typename _Ty>friend class Index;
 	IndexInfo (uint size, uint fileOffset) {
 		_fileOffset = fileOffset;
 		_size = size;
@@ -36,17 +38,20 @@ public:
 		_fileOffset = 0;
 		_size = PAGE_SIZE;
 	}
+	bool operator < (const IndexInfo& r) const{
+		return this->_fileOffset < r._fileOffset;
+	}
 };
 
 //测试两个类型是否可以转换
 template<typename T, typename U>
 class Conversion {
 private:
-	static char Test (U) {}
-	static int Test (...) {}
-	static T MakeT () {}
+	static char Test (U) { }
+	static int Test (...) { }
+	static T MakeT () { }
 public:
-	const bool state = (sizeof (Test (MakeT ())) == sizeof (char));
+	enum { state = (sizeof (Test (MakeT ())) == sizeof (char)) };
 };
 
 using namespace std;

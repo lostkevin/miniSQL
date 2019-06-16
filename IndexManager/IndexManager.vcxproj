@@ -115,9 +115,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\BPTree\BPTree_V3.h" />
+    <ClInclude Include="..\BufferManager\BufferManager.h" />
     <ClInclude Include="IndexManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\BufferManager\BufferManager.cpp" />
     <ClCompile Include="IndexManager.cpp" />
     <ClCompile Include="Test_IndexMgr.cpp" />
   </ItemGroup>
