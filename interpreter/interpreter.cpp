@@ -830,7 +830,7 @@ int Interpreter::getBits(float num) {
 		bit++;
 		num = -num;
 	}
-	int integer_part = num;
+	int integer_part = (int)num;
 	while (integer_part != 0) {
 		bit++;
 		integer_part /= 10;
