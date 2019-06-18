@@ -1,7 +1,7 @@
 #ifndef API_H
 #define API_H
 #include "../interpreter/basic.h"
-//#include "../catalogmanager/catalogmanager.h"
+#include "../catalog/catalog.h"
 #include "../IndexManager/IndexManager.h"
 using namespace std;
 //API接口。作为Interpreter层操作和底层Manager连接的接口
@@ -34,10 +34,12 @@ private:
 	Table joinTable(Table &table1, Table &table2, string target_attr, Where where);
 
 protected:
-	RecordManager record;
-	CatalogManager catalog;
+	//Table table;
+	//index iindex;
 	//IndexManager index;
 	//BufferManager buffer;
+	RecordManager record;
+	CatalogManager catalog;
 };
 
 //用于对vector的sort时排序

@@ -13,8 +13,8 @@ API::~API() {}
 Table API::selectRecord(string table_name, vector<string> target_attr, vector<Where> where, char operation)
 {
 	//输入表名，条件
-	if (0 == target_attr.size()) {
-		return record.SelectRecord(table_name);
+	if (target_attr.size() == 0) {
+		return record.selectRecord(table_name);
 	}
 	else if (1 == target_attr.size()) {
 		return record.selectRecord(table_name, target_attr[0], where[0]);
@@ -41,7 +41,7 @@ int API::deleteRecord(string table_name, string target_attr, Where where)
 }
 
 //向对应表内插入一条记录
-void API::insertRecord(std::string table_name, Tuple& tuple)
+void API::insertRecord(string table_name, Tuple& tuple)
 {
 	record.insertRecord(table_name, tuple);
 	return;
@@ -62,10 +62,11 @@ bool API::dropTable(string table_name)
 	return true;
 }
 //功能：在数据库中创建新的索引信息
-bool API::createIndex(string table_name, string index_name, string attr_name, const _KTy & key)
+bool API::createIndex(string table_name, string index_name, string attr_name)
 {
-	index.insert(key, index)
+	IndexManager index(table_name);
 
+	std::string file_path = "INDEX_FILE_" + attr_name + "_" + table_name;
 	string file_path = "INDEX_FILE_" + attr_name + "_" + table_name;
 	int type;
 	catalog.createIndex(table_name, attr_name, index_name);
@@ -84,10 +85,10 @@ bool API::createIndex(string table_name, string index_name, string attr_name, co
 //删除对应表的对应属性上的索引
 bool API::dropIndex(std::string table_name, std::string index_name)
 {
-	index.insert();
+	IndexManager index(table_name);
 
-	std::string attr_name = catalog.IndextoAttr(table_name, index_name);
-	std::string file_path = "INDEX_FILE_" + attr_name + "_" + table_name;
+	string attr_name = catalog.IndextoAttr(table_name, index_name);
+	string file_path = "INDEX_FILE_" + attr_name + "_" + table_name;
 	int type;
 
 	Attribute attr = catalog.getAttribute(table_name);
@@ -109,9 +110,9 @@ bool API::dropIndex(std::string table_name, std::string index_name)
 Table API::unionTable(Table &table1, Table &table2, std::string target_attr, Where where)
 {
 	Table result_table(table1);
-	std::vector<Tuple>& result_tuple = result_table.getTuple();
-	std::vector<Tuple> tuple1 = table1.getTuple();
-	std::vector<Tuple> tuple2 = table2.getTuple();
+	vector<Tuple>& result_tuple = result_table.getTuple();
+	vector<Tuple> tuple1 = table1.getTuple();
+	vector<Tuple> tuple2 = table2.getTuple();
 	result_tuple = tuple1;
 
 	//std::vector<Tuple>().swap(result_tuple);
@@ -126,13 +127,13 @@ Table API::unionTable(Table &table1, Table &table2, std::string target_attr, Whe
 		if (!isSatisfied(tuple2[j], i, where))
 			result_tuple.push_back(tuple2[j]);
 
-	std::sort(result_tuple.begin(), result_tuple.end(), sortcmp);
+	sort(result_tuple.begin(), result_tuple.end(), sortcmp);
 	return result_table;
 	
 }
 
 //私有函数，用于多条件查询时的and条件合并
-Table API::joinTable(Table &table1, Table &table2, std::string target_attr, Where where)
+Table API::joinTable(Table &table1, Table &table2, string target_attr, Where where)
 {
 	Table result_table(table1);
 	vector<Tuple>& result_tuple = result_table.getTuple();
@@ -157,8 +158,8 @@ Table API::joinTable(Table &table1, Table &table2, std::string target_attr, Wher
 //用于对vector的sort时排序
 bool sortcmp(const Tuple &tuple1, const Tuple &tuple2)
 {
-	std::vector<Data> data1 = tuple1.getData();
-	std::vector<Data> data2 = tuple2.getData();
+	vector<Data> data1 = tuple1.getData();
+	vector<Data> data2 = tuple2.getData();
 
 	switch (data1[0].type) {
 	case -1: return data1[0].datai < data2[0].datai;
@@ -204,7 +205,7 @@ bool calcmp(const Tuple &tuple1, const Tuple &tuple2)
 
 bool isSatisfied(Tuple& tuple, int target_attr, Where where)
 {
-	std::vector<Data> data = tuple.getData();
+	vector<Data> data = tuple.getData();
 
 	switch (where.relation_character) {
 	case LESS: {
