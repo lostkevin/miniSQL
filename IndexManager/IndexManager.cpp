@@ -167,6 +167,17 @@ void IndexManager::close ()
 	ITree = nullptr;
 }
 
+void IndexManager::getAllIndex (vector<IndexInfo>& result)
+{
+	switch (type) {
+	case INT:ITree->getAllIndex (result); return;
+	case FLOAT:FTree->getAllIndex (result); return;
+	case STRING:CTree->getAllIndex (result); return;
+	default:
+		throw new exception ("NullIndexException");
+	}
+}
+
 void IndexManager::dropIndex ()
 {
 	IOManager.drop ();

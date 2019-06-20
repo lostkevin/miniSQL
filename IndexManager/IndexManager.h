@@ -214,6 +214,19 @@ public:
 		return result;
 	}
 
+	void getAllIndex (vector<IndexInfo> & result) {
+		IndexInfo rootInfo = getRootInfo ();
+		BPlusNode<_KTy> *Root = GetNodePtr (rootInfo);
+		while (Root && Root->type != LEAF)Root = GetNodePtr (Root->index[0].info);
+		while (Root) {
+			for (uint i = 0; i < Root->size; i++) {
+				result.push_back (Root->index[i].info);
+			}
+			Root = GetNodePtr (Root->RIndex);
+		}
+		update ();
+	}
+
 	//搜索指定key的indexinfo，如果找不到，返回文件头的indexinfo
 	const IndexInfo find (_KTy key) {
 		IndexInfo rootInfo = getRootInfo ();
@@ -320,6 +333,8 @@ public:
 	template<typename _KTy> void insert (const _KTy &key, const IndexInfo & data){}
 	//删除，若key不存在返回false, 删除成功返回true,否则抛异常
 	template<typename _KTy> bool erase (const _KTy &key);
+	//获取所有索引
+	void getAllIndex (vector<IndexInfo> & result);
 
 #ifdef DEBUG
 	uint examine () {
@@ -451,7 +466,6 @@ inline bool IndexManager::erase (const _KTy & key)
 {
 	throw new exception ("NullIndexException");
 }
-
 
 template<>
 inline bool IndexManager::erase (const int & key)

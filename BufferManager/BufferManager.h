@@ -90,5 +90,6 @@ public:
 	bool IsFileExist (const string& fileName);
 	//将某Page加载到buffer中并使他的Pin=给定值
 	void setPageState (const string &fileName, const IndexInfo &info, bool state);
+
 };
 

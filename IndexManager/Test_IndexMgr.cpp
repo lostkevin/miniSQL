@@ -22,9 +22,10 @@ int main () {
 	iMgr.insert (3170103618, info);
 	//当主键已经建立，给unique键手动建立索引时，使用find查找需要的indexinfo
 	//假设以primary key ——code为key的 index已经建好，文件名是p.index
-	IndexManager Finder(".\\p.index", bMgr);
-	iMgr.insert ("Kevin", Finder.find (3170103618));
-
+	IndexManager Finder (".\\p.index", bMgr);
+	iMgr.insert ("Kevin", Finder.find ((int)3170103618));
+	vector<IndexInfo> test;
+	iMgr.getAllIndex (test);
 
 
 
