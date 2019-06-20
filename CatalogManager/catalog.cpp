@@ -4,24 +4,26 @@
 
 #include <algorithm>
 #include "catalog.h"
-
 using namespace std;
-bool CheckAttrExist(string tablename, string attrname)//check if attribute is in the table
+
+BufferManager mybuffer;
+//ok
+bool CheckAttrExist (string tablename, string attrname)//check if attribute is in the table
 {
 
 	string filename = tablename + "_info";
 	ifstream file;
 	string attr_name;
 	string nextline;
-	file.open(filename.c_str(), ios::in);
+	file.open (filename.c_str (), ios::in);
 
-	while (!file.eof()) {
+	while (!file.eof ()) {
 		file >> attr_name;
 
 		if (attr_name == attrname)
 			return true;
 
-		getline(file, nextline);
+		getline (file, nextline);
 	}
 
 	return false;
@@ -29,50 +31,50 @@ bool CheckAttrExist(string tablename, string attrname)//check if attribute is in
 
 /* operations on table */
 
-
-bool CheckTableExist(string newtable_name)
+//ok
+bool CheckTableExist (string newtable_name)
 {
 	ifstream file;
 	string tablename;
 
-	file.open("TableNameList.txt", ios::in);
+	file.open ("TableNameList.txt", ios::in);
 
-	if (!file.is_open()) {
+	if (!file.is_open ()) {
 		return false;
 	}
 
-	while (!file.eof()) {
-		getline(file, tablename);
+	while (!file.eof ()) {
+		getline (file, tablename);
 		if (tablename == newtable_name) {
 			return true;
 		}
 	}
 
-	file.close();
+	file.close ();
 
 	return false;
 }
-
-Error cCreateTable(TableInfo info) {
+//ok
+Error cCreateTable (Table info) {
 	Error error;
-	Table newtable(info);
+	Table newtable (info);
 
 
 	ofstream file;
 
-	if (CheckTableExist(newtable.tablename)) {
+	if (CheckTableExist (newtable.tablename)) {
 		//printf("Error : Table \"%s\" already exists\n",newtable.tablename.c_str());
 		error.isError = true;
 		error.info = "Table '" + newtable.tablename + "' already exists";
 		return error;
 	}
 
-	file.open("TableNameList.txt", ios_base::app);
+	file.open ("TableNameList.txt", ios_base::app);
 	file << newtable.tablename << endl;
-	file.close();
+	file.close ();
 
 	string filename = newtable.tablename + "_info";
-	file.open(filename.c_str(), ios::out);
+	file.open (filename.c_str (), ios::out);
 
 	int i = 0;
 	for (i = 0; i < newtable.attr_num; i++) {
@@ -82,20 +84,20 @@ Error cCreateTable(TableInfo info) {
 			<< newtable.attr[i].primary << " "
 			<< newtable.attr[i].unique << endl;
 	}
-	file.close();
+	file.close ();
 	filename = newtable.tablename + "_record";
-	file.open(filename.c_str(), ios::out);
-	file.close();
+	file.open (filename.c_str (), ios::out);
+	file.close ();
 	error.isError = false;
 	error.info = "Success : 0 row(s) affected";
 	//cout<<"Success : 0 row(s) affected"<<endl;
 	return error;
 }
-
-Error DropTable(TableInfo info) {
+//ok
+Error DropTable (Table info) {
 	Error error;
-	string tablename = info.tableName;
-	if (!CheckTableExist(tablename)) {
+	string tablename = info.tablename;
+	if (!CheckTableExist (tablename)) {
 		error.isError = true;
 		error.info = "Unknown Table '" + tablename + "'";
 		//printf("Unknown Table \"%s\"\n",tablename.c_str());
@@ -103,32 +105,32 @@ Error DropTable(TableInfo info) {
 	}
 
 	string filename = tablename + "_info";
-	remove(filename.c_str());
+	remove (filename.c_str ());
 
 	filename = tablename + "_record";
-	remove(filename.c_str());
+	remove (filename.c_str ());
 
 
 	ifstream file;
-	file.open("TableNameList.txt", ios::in);
+	file.open ("TableNameList.txt", ios::in);
 	int i = 0;
 
 	string tablenamelist[32];
 	string name;
 
 
-	while (!file.eof()) {
+	while (!file.eof ()) {
 
-		getline(file, tablenamelist[i++]);
+		getline (file, tablenamelist[i++]);
 
 
 	}
 
-	file.close();
+	file.close ();
 
 	int pos;
 
-	for (i = 0; i < 32 && !tablenamelist[i].empty(); i++) {
+	for (i = 0; i < 32 && !tablenamelist[i].empty (); i++) {
 		if (tablename == tablenamelist[i]) {
 			pos = i;
 			break;
@@ -137,16 +139,16 @@ Error DropTable(TableInfo info) {
 
 
 
-	for (; pos < 32 && !tablenamelist[i].empty(); pos++) {
+	for (; pos < 32 && !tablenamelist[i].empty (); pos++) {
 		tablenamelist[pos] = tablenamelist[pos + 1];
 	}
 
 
 
 	ofstream file1;
-	file1.open("TableNameList.txt", ios::out);
+	file1.open ("TableNameList.txt", ios::out);
 
-	for (i = 0; i < 32 && !tablenamelist[i].empty(); i++) {
+	for (i = 0; i < 32 && !tablenamelist[i].empty (); i++) {
 		file1 << tablenamelist[i] << endl;
 	}
 	error.isError = false;
@@ -158,94 +160,89 @@ Error DropTable(TableInfo info) {
 
 /* operations on index */
 
-
-bool CheckIndexExist(string newindexname) {
+//ok
+bool CheckIndexExist (string newindexname) {
 	ifstream file;
 	string indexname;
 
-	file.open("IndexNameList.txt", ios::in);
+	file.open ("IndexNameList.txt", ios::in);
 
-	if (!file.is_open()) {
+	if (!file.is_open ()) {
 		return false;
 	}
 
-	while (!file.eof()) {
-		getline(file, indexname);
+	while (!file.eof ()) {
+		getline (file, indexname);
 		if (indexname == newindexname) {
 			return true;
 		}
 	}
-	file.close();
+	file.close ();
 	return false;
 
 }
-
-Error Createindex(IndexInfo indexInfo) {
+//createindex ok
+Error Createindex (index index) {
 	ofstream file;
 	Error error;
-	Index newindex(indexInfo);
-	/*for(int i=0;i<newindex.element.size();i++){
-		cout<<newindex.element[i].attr_name<<endl;
-	}*/
-	if (!CheckTableExist(newindex.table_name)) {
+
+
+	if (!CheckTableExist (index.table_name)) {
 		error.isError = true;
-		error.info = "Table '" + newindex.table_name + "' doesn't exist";
-		//printf("Table \"%s\" doesn't exist\n",newindex.table_name.c_str());
+		error.info = "Table '" + index.table_name + "' doesn't exist";
 		return error;
 
 	}
 
-	for (int i = 0; i < newindex.element.size(); i++) {
+	for (int i = 0; i < 5; i++) {	//5 = number of elements in attritube
 
-		if (!CheckAttrExist(newindex.table_name, newindex.element[i].attr_name)) {
+		if (!CheckAttrExist (index.table_name, index.element[i].attr_name)) {
 			error.isError = true;
-			error.info = "Key column '" + newindex.element[i].attr_name + "' doesn't exist in table";
-			//	printf("Key column \"%s\" doesn't exist in table\n",newindex.attr_name.c_str());
+			error.info = "Key column '" + index.element[i].attr_name + "' doesn't exist in table";
 			return error;
 
 		}
 	}
-	if (CheckIndexExist(newindex.index_name)) {
+	if (CheckIndexExist (index.index_name)) {
 		error.isError = true;
-		error.info = "Duplicate key name '" + newindex.index_name + "'";
-		// printf("Duplicate key name \"%s\"\n",newindex.index_name.c_str());
+		error.info = "Duplicate key name '" + index.index_name + "'";
 		return error;
 
 	}
 
-	file.open("IndexNameList.txt", ios_base::app);
+	file.open ("IndexNameList.txt", ios_base::app);
 
-	file << newindex.index_name << endl;
-	file.close();
+	file << index.index_name << endl;
+	file.close ();
 
-	string filename = newindex.index_name + "_info";
-	file.open(filename.c_str(), ios::out);
-	file << newindex.index_name << " " << newindex.table_name << " ";
-	for (int i = 0; i < newindex.element.size(); i++) {
+	string filename = index.index_name + "_info";
+	file.open (filename.c_str (), ios::out);
+	file << index.index_name << " " << index.table_name << " ";
+	for (int i = 0; i < index.element.size (); i++) {
 
-		file << newindex.element[i].attr_name;
-		if (i != newindex.element.size() - 1)
+		file << index.element[i].attr_name;
+		if (i != index.element.size () - 1)
 			file << " ";
 
 	}
 	file << endl;
 
-	file.close();
+	file.close ();
 
-	filename = newindex.index_name + "_record";
-	file.open(filename.c_str(), ios::out);
-	file.close();
+	filename = index.index_name + "_record";
+	file.open (filename.c_str (), ios::out);
+	file.close ();
 	error.isError = false;
 	error.info = "0row(s) affected, Records: 0 ,Duplicates :0, Warning :0";
 	//	printf("0row(s) affected, Records: 0 ,Duplicates :0, Warning :0\n");
 	return error;
 }
-
-Error Dropindex(IndexInfo indexInfo) {
+//dropindex ok
+Error Dropindex (index indexInfo) {
 	Error error;
-	Index oldindex;
-	oldindex.index_name = indexInfo.indexName;
-	if (!CheckIndexExist(oldindex.index_name)) {
+	index oldindex;
+	oldindex.index_name = indexInfo.index_name;
+	if (!CheckIndexExist (oldindex.index_name)) {
 		error.isError = true;
 		error.info = "Can not drop  '" + oldindex.index_name + "',check that column/key exists ";
 		//printf("Can not drop  \"%s\", check that column/key exists\n",oldindex.index_name.c_str());
@@ -255,27 +252,27 @@ Error Dropindex(IndexInfo indexInfo) {
 
 	string filename = oldindex.index_name + "_info";
 
-	remove(filename.c_str());
+	remove (filename.c_str ());
 
 	filename = oldindex.index_name + "_record";
 
-	remove(filename.c_str());
+	remove (filename.c_str ());
 
 	ifstream file;
-	file.open("IndexNameList.txt", ios::in);
+	file.open ("IndexNameList.txt", ios::in);
 
 	string indexnamelist[100];
 	int i = 0;
-	while (!file.eof()) {
+	while (!file.eof ()) {
 
-		getline(file, indexnamelist[i++]);
+		getline (file, indexnamelist[i++]);
 
 	}
 
-	file.close();
+	file.close ();
 	int pos;
 
-	for (i = 0; i < 100 && !indexnamelist[i].empty(); i++) {
+	for (i = 0; i < 100 && !indexnamelist[i].empty (); i++) {
 		if (indexnamelist[i] == oldindex.index_name) {
 
 			pos = i;
@@ -283,36 +280,36 @@ Error Dropindex(IndexInfo indexInfo) {
 		}
 	}
 
-	for (; pos < 100 && !indexnamelist[pos].empty(); pos++) {
+	for (; pos < 100 && !indexnamelist[pos].empty (); pos++) {
 
 		indexnamelist[pos] = indexnamelist[pos + 1];
 	}
 
 	ofstream file1;
 
-	file1.open("IndexNameList.txt", ios::out);
+	file1.open ("IndexNameList.txt", ios::out);
 
-	for (i = 0; i < 100 && !indexnamelist[i].empty(); i++) {
+	for (i = 0; i < 100 && !indexnamelist[i].empty (); i++) {
 
 		file1 << indexnamelist[i] << endl;
 	}
 
-	file1.close();
+	file1.close ();
 	error.isError = 0;
 	error.info = "0row(s) affected, Records: 0 ,Duplicates :0, Warning :0";
 	//printf("0row(s) affected, Records: 0 ,Duplicates :0, Warning :0\n");
 	return error;
 
 
-}
-
-Table readtableinfo(string table_name) {
+}  //ok?
+//ok
+Table readtableinfo (string table_name) {
 	Table table;
 	table.tablename = table_name;
 	table.attr_num = 0;
 	string filename = table_name + "_info";
 	ifstream in;
-	in.open(filename.c_str(), ios::in);
+	in.open (filename.c_str (), ios::in);
 
 	if (!in)
 	{
@@ -322,7 +319,7 @@ Table readtableinfo(string table_name) {
 	string info;
 	int k = 0;
 
-	while (!in.eof())
+	while (!in.eof ())
 	{
 		in >> table.attr[k].attr_name;
 		in >> table.attr[k].attr_type;
@@ -335,21 +332,23 @@ Table readtableinfo(string table_name) {
 		k++;
 	}
 	table.attr_num = k - 1;
-	in.close();
+	in.close ();
 	return table;
 }
-
-IndexInfo readindexinfo(string index_name) {
-	IndexInfo indexInfo;
-	Index oldindex;
+//不知道o不ok
+index readindexinfo (string index_name) {
+	index indexInfo;
+	index oldindex;
 	oldindex.index_name = index_name;
-	if (!CheckIndexExist(oldindex.index_name)) {
+	if (!CheckIndexExist (oldindex.index_name)) {
 		return indexInfo;
 	}
-	indexInfo.indexName = index_name;
+
+	indexInfo.index_name = index_name;
+
 	ifstream in;
 	string filename = index_name + "_info";
-	in.open(filename.c_str(), ios::in);
+	in.open (filename.c_str (), ios::in);
 	if (!in) {
 		cout << "open file failed" << endl;
 		return indexInfo;
@@ -359,38 +358,29 @@ IndexInfo readindexinfo(string index_name) {
 	in >> store;
 
 	in >> store;
-	indexInfo.tableName = store;
+	indexInfo.table_name = store;
 
 	Table T;
-	T = readtableinfo(indexInfo.tableName);
+	T = readtableinfo (indexInfo.table_name);
 
-	while (!in.eof()) {
+	while (!in.eof ()) {		//从文件中读index，存储在store中
 		in >> store;
-		if (in.fail()) {
+		if (in.fail ()) {
 			break;
 		}
-		RowInfo r;
+		index r[Asize];
 		for (int i = 0; i < T.attr_num; i++) {
 			if (store == T.attr[i].attr_name) {
-				r.rowName = store;
-				/*	if(T.attr[i].attr_type==INT){
-						r.type=Int;
-					}
-					if(T.attr[i].attr_type==CHAR){
-						r.type=Char;
-						r.charSize=T.attr[i].attr_length;
-					}
-					if(T.attr[i].attr_type==FLOAT){
-						r.type=Float;
-					} */
-				r.isUnique = T.attr[i].unique;
-				r.isPrimary = T.attr[i].primary;
-				indexInfo.element.push_back(r);
+				r[i].index_name = store;
+				r[i].attribute.unique = T.attr[i].unique;
+				r[i].attribute.primary = T.attr[i].primary;
+
 				break;
 			}
 
 		}
 	}
-	in.close();
+	in.close ();
 	return indexInfo;
 }
+

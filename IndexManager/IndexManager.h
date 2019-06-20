@@ -347,10 +347,7 @@ public:
 template<typename _KTy>
 inline const IndexInfo IndexManager::find (_KTy key)
 {
-	switch (type) {
-	default:
-		throw new exception ("NullIndexException");
-	}
+	throw new exception ("NullIndexException");
 }
 
 template<>
@@ -453,7 +450,6 @@ template<typename _KTy>
 inline bool IndexManager::erase (const _KTy & key)
 {
 	throw new exception ("NullIndexException");
-	
 }
 
 
