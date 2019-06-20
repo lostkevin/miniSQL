@@ -29,7 +29,6 @@
 
 using namespace std;
 
-
 class StringM
 {
 public:
@@ -102,7 +101,7 @@ public:
 	std::pair<bool, std::string> AnalysePrimary(std::string str);
 };
 
-class Index_Info
+class IndexInfo
 {
 public:
 	bool isError;
@@ -193,40 +192,6 @@ struct block {
 //	bool delete_value(string filename, int offset);//删除文件中指定位置存储在缓冲区的块
 //};
 
-class IndexInfo {
-private:
-	//块大小
-	uint _size;
-	//文件偏移量
-	uint _fileOffset;
-	//friend class IndexManager;
-	friend class BufferManager;
-	friend int main();
-	template <typename _Ty>friend class Index;
-	IndexInfo(uint size, uint fileOffset) {
-		_fileOffset = fileOffset;
-		_size = size;
-	}
-
-	IndexInfo(uint fileOffset) {
-		_fileOffset = fileOffset;
-	}
-public:
-	IndexInfo() {
-		_fileOffset = 0;
-		_size = PAGE_SIZE;
-	}
-	bool operator < (const IndexInfo& r) const {
-		return this->_fileOffset < r._fileOffset;
-	}
-
-	bool operator == (const IndexInfo& r)const {
-		return this->_fileOffset == r._fileOffset && this->_size == r._size;
-	}
-
-	bool operator != (const IndexInfo& r)const { return !(*this == r); }
-};
-
 class BufferManager {
 private:
 	class Page {
@@ -316,6 +281,29 @@ public:
 };
 
 int Block_num(string file_name);
+/*delete_value
+input: filename,offset decide a dintinct block
+output: if filenanme is " " or can't find the block that should be delete,output an error
+		else return true
+*/
+/*findblock(string filename,int offset, bool lock)
+输入：寻找的block的文件名，在文件中的偏移地址
+返回值：如果filename==" ",返回一个空的块，如果没有空的块，返回NULL；如果filename!=" "，返回找到的块的地址，如果没有找到，返回NULL
+*/
+/*	bool write_fileToblock(string filename,int offset,bool lock);
+input: filename,offset confirm the file want to write to block,lock indicate whether the block can be changed
+如果缓存区有空间，那么会将文件内容读入到空的block中，如果没有空间，那么选择已经被修改过的block进行替换，如果所有的
+块都没有被修改过，那么报错：error:the buffer is full,can't find block having been changed
+*/
+/*	bool write_blockTofile(string filename, int offset);
+将finame和额offset确定的末一个blovk写回到内存中去
+*/
+/*	bool write_allbufferTofile();
+将缓存区中所有改变过的非空的块写回文件中
+*/
+/*  	void initial_buffer();
+将缓存区的所有块初始化成空的
+*/
 
 
 class Attribute {		//表格中属性的信息
@@ -418,15 +406,15 @@ public:
 };
 
 
-class index {
+class Index {
 public:
 	string index_name;
 	string table_name;
 	// string attr_name;
 	vector <Attribute> element;
-	index() {
+	Index() {
 	}
-	index(Index_Info indexInfo) {
+	Index(IndexInfo indexInfo) {
 		index_name = indexInfo.indexName;
 		table_name = indexInfo.tableName;
 		Attribute a;
@@ -473,19 +461,13 @@ Error DropTable(TableInfo info);
 
 bool CheckIndexExist(string newindexname);
 
-Error Createindex(Index_Info indexInfo);
+Error Createindex(IndexInfo indexInfo);
 
-Error Dropindex(Index_Info indexInfo);
+Error Dropindex(IndexInfo indexInfo);
 
 Table readtableinfo(string table_name);
 
-Index_Info readindexinfo(string index_name);
+IndexInfo readindexinfo(string index_name);
 
-Error Insert(InsertInfo insertInfo);  //insert记录 返回出错信息 
 
-selectError  Select_Delete(SDInfo sdInfo); //select & delete 返回出错信息 
-
-string  tostring(Tuple tuple);
-
-Tuple searchrecord(int offset, string table_name);  //给定offset 与 tablename 返回一个tuple 
 
