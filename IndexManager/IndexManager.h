@@ -348,15 +348,6 @@ template<typename _KTy>
 inline const IndexInfo IndexManager::find (_KTy key)
 {
 	switch (type) {
-	case INT: {
-		return ITree->find (key);
-	}
-	case FLOAT: {
-		return FTree->find (key);
-	}
-	case STRING: {
-		return CTree->find (key);
-	}
 	default:
 		throw new exception ("NullIndexException");
 	}
