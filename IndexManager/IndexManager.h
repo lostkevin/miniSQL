@@ -7,8 +7,8 @@
 
 enum TreeTYPE {
 	UNDEF,
-	INT,
-	FLOAT,
+	INT ,
+	FLOAT ,
 	STRING
 };
 

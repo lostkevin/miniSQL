@@ -1,6 +1,6 @@
 #pragma once
 #include"catalog.h"
-#include "basic.h"
+#include "../interpreter/basic.h"
 #include<sstream>
 #include"../BufferManager/BufferManager.h"
 #include"../IndexManager/IndexManager.h"
@@ -62,4 +62,4 @@ string Convert_ftos(float Num)
 
 
 
-Error Insert_tuple(std::string table_name, Tuple insert_tuple);
+Error Insert_tuple(std::string table_name, Tuple_s insert_tuple);

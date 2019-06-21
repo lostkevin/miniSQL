@@ -41,13 +41,13 @@
     <ClInclude Include="..\CatalogManager\catalog.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="basic.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\BufferManager\BufferManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\IndexManager\IndexManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\interpreter\basic.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -163,7 +163,7 @@
     <ClInclude Include="..\BufferManager\BufferManager.h" />
     <ClInclude Include="..\CatalogManager\catalog.h" />
     <ClInclude Include="..\IndexManager\IndexManager.h" />
-    <ClInclude Include="basic.h" />
+    <ClInclude Include="..\interpreter\basic.h" />
     <ClInclude Include="RecordManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

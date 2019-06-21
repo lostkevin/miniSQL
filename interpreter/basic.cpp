@@ -1,41 +1,33 @@
-﻿//
-//  basic.cpp
-//  base
-//
-//  Created by Sr on 2017/5/25.
-//  Copyright © 2017年 Sr. All rights reserved.
-//
-
-#include "basic.h"
+﻿#include "./basic.h"
 #include <ostream>
 using namespace std;
 
-Tuple::Tuple(const Tuple &tuple_in) {
+Tuple_s::Tuple_s(const Tuple_s &tuple_in) {
 	for (int index = 0; index < tuple_in.data_.size(); index++)
 	{
 		this->data_.push_back(tuple_in.data_[index]);
 	}
 }
 
-inline int Tuple::getSize() {
+inline int Tuple_s::getSize() {
 	return (int)data_.size();
 }
 
 //新增数据
-void Tuple::addData(Data data_in) {
+void Tuple_s::addData(Data data_in) {
 	this->data_.push_back(data_in);
 }
 
-bool Tuple::isDeleted() {
+bool Tuple_s::isDeleted() {
 	return isDeleted_;
 }
 
-void Tuple::setDeleted() {
+void Tuple_s::setDeleted() {
 	isDeleted_ = true;
 }
 
 //得到元组中的数据
-std::vector<Data> Tuple::getData() const {
+std::vector<Data> Tuple_s::getData() const {
 	return this->data_;
 }
 
@@ -44,7 +36,7 @@ ostream & operator << (ostream &out, const string &s)
 	out << s;
 	return out;
 } //对<< 进行重载。
-void Tuple::showTuple() {
+void Tuple_s::showTuple() {
 	for (int index = 0; index < getSize(); index++) {
 		if (data_[index].type == -1)
 			std::cout << data_[index].datai << '\t';
@@ -60,14 +52,14 @@ void Tuple::showTuple() {
 }
 
 //table构造函数
-Table::Table(std::string title, Attribute attr) {
+Table_s::Table_s(std::string title, Attribute_s attr) {
 	this->title_ = title;
 	this->attr_ = attr;
 	this->index_.num = 0;
 }
 
 //table的构造函数，拷贝用
-Table::Table(const Table &table_in) {
+Table_s::Table_s(const Table_s &table_in) {
 	this->attr_ = table_in.attr_;
 	this->index_ = table_in.index_;
 	this->title_ = table_in.title_;
@@ -95,7 +87,7 @@ Table::Table(const Table &table_in) {
 // }
 
 //插入索引
-int Table::setIndex(short index, std::string index_name) {
+int Table_s::setIndex(short index, std::string index_name) {
 	short tmpIndex;
 	for (tmpIndex = 0; tmpIndex < index_.num; tmpIndex++) {
 		if (index == index_.location[tmpIndex])  //当该元素已经有索引时，报错
@@ -117,7 +109,7 @@ int Table::setIndex(short index, std::string index_name) {
 	return 1;
 }
 
-int Table::dropIndex(std::string index_name) {
+int Table_s::dropIndex(std::string index_name) {
 	short tmpIndex;
 	for (tmpIndex = 0; tmpIndex < index_.num; tmpIndex++) {
 		if (index_name == index_.indexname[tmpIndex])  //当该元素已经有索引时，跳出
@@ -156,21 +148,21 @@ int Table::dropIndex(std::string index_name) {
 // }
 
 //返回一些private的值
-std::string Table::getTitle() {
+std::string Table_s::getTitle() {
 	return title_;
 }
-Attribute Table::getAttr() {
+Attribute_s Table_s::getAttr() {
 	return attr_;
 }
-std::vector<Tuple>& Table::getTuple() {
+std::vector<Tuple_s>& Table_s::getTuple() {
 	return tuple_;
 }
-Index Table::getIndex() {
+Index_s Table_s::getIndex() {
 	return index_;
 }
 
 
-void Table::showTable() {
+void Table_s::showTable() {
 	for (int index = 0; index < attr_.num; index++) {
 		std::cout << attr_.name[index] << '\t';
 	}
@@ -180,7 +172,7 @@ void Table::showTable() {
 		tuple_[index].showTuple();
 }
 
-void Table::showTable(int limit) {
+void Table_s::showTable(int limit) {
 	for (int index = 0; index < attr_.num; index++) {
 		std::cout << attr_.name[index] << '\t';
 	}

@@ -39,7 +39,7 @@ struct Where {
 };
 
 //在确定类型时，慎用str.size()+1来决定str的type的值，一张表最多32个attribute
-struct Attribute {
+struct Attribute_s {
 	int num;  //存放table的属性数
 	std::string name[32];  //存放每个属性的名字
 	short type[32];  //存放每个属性的类型，-1：int,0:float,1~255:string的长度+1
@@ -49,20 +49,20 @@ struct Attribute {
 };
 
 //索引管理，一张表最多只能有10个index
-struct Index {
+struct Index_s {
 	int num;  //index的总数
 	short location[10];  //每个index在Attribute的name数组中是第几个
 	std::string indexname[10];  //每个index的名字
 };
 
 //元组管理，数据只增不减
-class Tuple {
+class Tuple_s {
 private:
 	std::vector<Data> data_;  //存储元组里的每个数据的信息
 	bool isDeleted_;
 public:
-	Tuple() : isDeleted_(false) {};
-	Tuple(const Tuple &tuple_in);  //拷贝元组
+	Tuple_s() : isDeleted_(false) {};
+	Tuple_s(const Tuple_s &tuple_in);  //拷贝元组
 	void addData(Data data_in);  //新增元组
 	std::vector<Data> getData() const;  //返回数据
 	int getSize();  //返回元组的数据数量
@@ -71,17 +71,17 @@ public:
 	void showTuple();  //显示元组中的所有数据
 };
 
-class Table {
+class Table_s {
 private:
 	std::string title_;  //表名
-	std::vector<Tuple> tuple_;  //存放所有的元组
-	Index index_;  //表的索引信息
+	std::vector<Tuple_s> tuple_;  //存放所有的元组
+	Index_s index_;  //表的索引信息
 public:
-	Attribute attr_;  //数据的类型
+	Attribute_s attr_;  //数据的类型
 	//构造函数
-	Table() {};
-	Table(std::string title, Attribute attr);
-	Table(const Table &table_in);
+	Table_s() {};
+	Table_s(std::string title, Attribute_s attr);
+	Table_s(const Table_s &table_in);
 
 	// int DataSize();  //每个tuple占的数据大小
 
@@ -90,9 +90,9 @@ public:
 
 	//private的输出接口
 	std::string getTitle();
-	Attribute getAttr();
-	std::vector<Tuple>& getTuple();
-	Index getIndex();
+	Attribute_s getAttr();
+	std::vector<Tuple_s>& getTuple();
+	Index_s getIndex();
 	short gethasKey();
 
 	void showTable(); //显示table的部分数据

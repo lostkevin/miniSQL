@@ -15,10 +15,8 @@
 #define BlockNum  10
 #define BlockSize 4096
 #define Asize 32
-#define INT 1
-#define CHAR 2
-#define FLOAT 3
 
+//修改了一下宏定义
 
 using namespace std;
 
