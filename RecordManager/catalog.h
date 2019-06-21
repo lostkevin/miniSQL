@@ -152,20 +152,6 @@ public:
 		}
 		return i;
 	}
-	/*Table &operator =(Table& a)
-	{
-		int len = strlen(a.tablename.length);
-		tablename = new char[len + 1];
-		this->tablename.assign(a.tablename);
-		this->primary_key = a.primary_key;
-		this->attr_num = a.attr_num;
-		this->isError = a.isError;
-		this->charSize = a.charSize;
-		int i; for (i = 0; i < Asize; i++) {
-			this->attr[i] = a.attr[i];
-		}
-		return *this;
-	}*/
 };
 
 class Error {

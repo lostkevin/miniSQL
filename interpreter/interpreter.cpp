@@ -1,4 +1,5 @@
 ﻿#include "interpreter.h"
+#include"../CatalogManager/catalog.h"
 Interpreter::Interpreter() {
 }
 
@@ -292,7 +293,6 @@ void Interpreter::EXEC_DELETE() {
 
 void Interpreter::EXEC_INSERT() {
 	//API API;
-	//CatalogManager CM;
 	std::string table_name;
 	int check_index;
 	Tuple tuple_insert;
@@ -305,8 +305,9 @@ void Interpreter::EXEC_INSERT() {
 	check_index += 8;
 	if (query[check_index] != '(')
 		throw input_format_error();
-	//if (!CM.hasTable(table_name))
-	//	throw table_not_exist();
+	if (!CheckTableExist(table_name)) {
+		throw table_not_exist();
+	}
 	//attr_exist = CM.getAttribute(table_name);
 	check_index--;
 	int num_of_insert = 0;
