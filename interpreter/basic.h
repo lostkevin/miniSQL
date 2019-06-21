@@ -34,6 +34,7 @@ struct Data {
 
 //Where存放一组判断语句
 struct Where {
+	string attr_name;
 	Data data; //数据
 	WHERE relation_character;   //关系
 };

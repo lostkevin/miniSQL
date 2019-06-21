@@ -295,7 +295,7 @@ void Interpreter::EXEC_INSERT() {
 	//API API;
 	std::string table_name;
 	int check_index;
-	Tuple tuple_insert;
+	Tuple_s tuple_insert;
 	Attribute attr_exist;
 	if (getLower(query, 7).substr(7, 4) != "into")
 		throw input_format_error();
@@ -402,7 +402,7 @@ void Interpreter::EXEC_SELECT() {
 	table_name = getWord(check_index, check_index);
 	//if (!CM.hasTable(table_name))
 	//	throw table_not_exist();
-	//Attribute tmp_attr = CM.getAttribute(table_name);
+	//Attribute_s tmp_attr = CM.getAttribute(table_name);
 	/*
 	if (!flag) {
 		//查找所有属性
@@ -452,6 +452,8 @@ void Interpreter::EXEC_SELECT() {
 			{
 				if (tmp_target_name == tmp_attr.name[i]) {
 					tmp_where.data.type = tmp_attr.type[i];
+					//Attribute_s tmp_attr;
+					//tmp_where.attr_name = tmp_attr.name;
 					switch (tmp_where.data.type) {
 					case -1:
 						try {
