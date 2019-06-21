@@ -128,7 +128,7 @@ Error Insert_tuple(std::string table_name,Tuple_s insert_tuple) {
 		else if (d.type == 3) {
 			data = d.datas;
 		}
-		strcpy(attr_value, data.c_str());
+		strcpy_s(attr_value, data.c_str());
 		strcat_s(array, attr_value);
 		//如果是primarykey，直接存index
 		if (t.attr[i].attr_name == t.primary_key) {
