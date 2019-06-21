@@ -4,6 +4,34 @@
 #include <iostream>
 #include "RecordManager.h"
 
+string tostring (Tuple tuple) {
+
+	string result = "";
+	int i = 0;
+	for (i = 0; tuple.attr_values[i] != ""; i++) {
+		result += tuple.attr_values[i];
+		if (tuple.attr_values[i + 1] != "")
+			result += ",";
+	}
+
+	//	 printf("%d\n",i);
+
+
+	return result;
+
+}
+
+
+//c++ 将float 类型转换成string 类型:
+string Convert_ftos (float Num)
+{
+	ostringstream oss;
+	oss << Num;
+	string str (oss.str ());
+	return str;
+}
+
+
 /*
 	插入一个tuple的函数，table_name插入的表名，insert_tuple插入的tuple
 */
@@ -41,7 +69,6 @@ Error Insert_tuple(std::string table_name,Tuple_s insert_tuple) {
 	
 	string temp;
 	char buffer[110000];
-	BYTE array[400];
 	//vector<index> insert_index;
 	//readindexinfo(tuple.tablename, insert_index);
 	//通过catalog获取indexfilename

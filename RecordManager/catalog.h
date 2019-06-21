@@ -1,6 +1,4 @@
-#ifndef CATALOG_H
-#define CATALOG_H
-#endif
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -15,9 +13,7 @@
 #define BlockNum  10
 #define BlockSize 4096
 #define Asize 32
-#define INT 1
-#define CHAR 2
-#define FLOAT 3
+
 
 
 using namespace std;

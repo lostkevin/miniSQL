@@ -5,12 +5,7 @@
 #include "..\BPTree\BPTree_V3.h"
 #include "..\BufferManager\BufferManager.h"
 
-enum TreeTYPE {
-	UNDEF,
-	INT ,
-	FLOAT ,
-	STRING
-};
+
 
 struct BasicInfo {
 	TreeTYPE type;

@@ -60,5 +60,12 @@ public:
 	enum { state = (sizeof (Test (MakeT ())) == sizeof (char)) };
 };
 
+enum TreeTYPE {
+	UNDEF,
+	INT,
+	FLOAT,
+	STRING
+};
+
 using namespace std;
 

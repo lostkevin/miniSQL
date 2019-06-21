@@ -2,7 +2,6 @@
 #include"catalog.h"
 #include "../interpreter/basic.h"
 #include<sstream>
-#include"../BufferManager/BufferManager.h"
 #include"../IndexManager/IndexManager.h"
 
 class Tuple : public Table {
@@ -33,32 +32,6 @@ public:
 
 };
 
-string tostring(Tuple tuple) {
-
-	string result = "";
-	int i = 0;
-	for (i = 0; tuple.attr_values[i] != ""; i++) {
-		result += tuple.attr_values[i];
-		if (tuple.attr_values[i + 1] != "")
-			result += ",";
-	}
-
-	//	 printf("%d\n",i);
-
-
-	return result;
-
-}
-
-
-//c++ 将float 类型转换成string 类型:
-string Convert_ftos(float Num)
-{
-	ostringstream oss;
-	oss << Num;
-	string str(oss.str());
-	return str;
-}
 
 
 
