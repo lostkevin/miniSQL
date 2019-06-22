@@ -207,7 +207,7 @@ void Interpreter::EXEC_DELETE() {
 	if (query[check_index + 1] == '\0') {
 		attr_name = "";
 		API.deleteRecord(table_name, where_delete);
-		std::cout << ">>> SUCCESS" << std::endl;
+		std::cout << "      > SUCCESS" << std::endl;
 		return;
 	}
 	//有where子句

@@ -200,7 +200,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	//std::cout << "No!\n";
 }
 
-Error select_tuple(string table_name, vector<std::string> target_name, Where where_select) {
+Error select_tuple(string table_name, vector<std::string> target_name, vector<Where> where_select,bool operation) {
 	CatalogManager cmgr;
 	Error error;					//返回错误信息
 	//Table* table;					//表的信息
@@ -214,7 +214,6 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	*/
 	cmgr.getAttrInfo(table_name, attr_info);
 	cmgr.getIndex(table_name, index_info);
-	//检查是否有错误
 
 	BufferManager bmgr;
 	string filename = ".\\";
@@ -223,6 +222,32 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	cout << filename << endl;
 	int i = 0, j = 0, k = 0;
 
+	//输出table attribute属性
+	for (int i = 0; i < attr_info.size(); i++) {
+		std::cout << attr_info[i].attr_name << '\t';
+	}
+	std::cout << std::endl;
+	//对target排序
+	int top = 0;
+	for (i = 0; i < attr_info.size(); i++) {
+		for (j = top; j < target_name.size(); j++) {
+			if (attr_info[i].attr_name == target_name[j]) {
+				if (top == j) {
+					top++; 
+					continue;
+				}
+				string temp = target_name[j];
+				target_name[top] = target_name[j];
+				target_name[j] = temp;
+				top++;
+			}
+		}
+	}
+	//存在target不属于attribute中
+	if (i == attr_info.size() && top < target_name.size()) {
+		error.info = "ERROR:wrong attribute list!";
+		return error;
+	}
 	string temp;
 	//获取primarykey的名称，加入到index_name中，方便之后查找indexfilename
 	string index_name = "primary_";
@@ -245,7 +270,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	//声明一个数组来记录该表所有的indexinfo
 	vector<IndexInfo> all_indexinfo;
 	iMgr.getAllIndex(all_indexinfo);
-	//BYTE array[400] = "";
+	
 	int where_top = 0;
 	vector<Tuple_s> select_data;
 	//所有tuple逐个对比
@@ -278,9 +303,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 		
 		for (j = 0; j < attr_info.size();j++) {
 			//attribute名相同、且值相同
-			if (where_select.attr_name.compare(attr_info[j].attr_name) == 0) {
-				if (where_select.data.type == 1) {
-					if (where_select.data.datai == att_data[i].datai&&where_select.relation_character == EQUAL) {
+			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
+				if (where_select[0].data.type == 1) {
+					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -294,7 +319,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datai >= att_data[i].datai&&where_select.relation_character == GREATER_OR_EQUAL) {
+					else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -308,7 +333,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datai <= att_data[i].datai&&where_select.relation_character == LESS_OR_EQUAL) {
+					else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -322,7 +347,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datai > att_data[i].datai&&where_select.relation_character == GREATER) {
+					else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -336,79 +361,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datai < att_data[i].datai&&where_select.relation_character == LESS) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-				}
-				if (where_select.data.type == 2) {
-					if (where_select.data.dataf == att_data[i].datai&&where_select.relation_character == EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select.data.dataf >= att_data[i].dataf&&where_select.relation_character == GREATER_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select.data.dataf <= att_data[i].dataf&&where_select.relation_character == LESS_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select.data.dataf > att_data[i].dataf&&where_select.relation_character == GREATER) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select.data.dataf < att_data[i].dataf&&where_select.relation_character == LESS) {
+					else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -423,8 +376,8 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						where_top++;
 					}
 				}
-				if (where_select.data.type == 2) {
-					if (where_select.data.datas == att_data[i].datas&&where_select.relation_character == EQUAL) {
+				if (where_select[0].data.type == 2) {
+					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -438,7 +391,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datas >= att_data[i].datas&&where_select.relation_character == GREATER_OR_EQUAL) {
+					else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -452,7 +405,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datas <= att_data[i].datas&&where_select.relation_character == LESS_OR_EQUAL) {
+					else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -466,7 +419,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datas > att_data[i].datas&&where_select.relation_character == GREATER) {
+					else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -480,7 +433,79 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						select_data.push_back(tuple);
 						where_top++;
 					}
-					else if (where_select.data.datas < att_data[i].datas&&where_select.relation_character == LESS) {
+					else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
+						Tuple_s tuple;
+						int k, attr_top = 0;
+						//增加select的属性的值到输出的数组中
+						for (k = 0; k < att_data.size(); k++) {
+							if (attr_info[k].attr_name != target_name[attr_top]) {
+								continue;
+							}
+							tuple.addData(att_data[k]);
+							attr_top++;
+						}
+						select_data.push_back(tuple);
+						where_top++;
+					}
+				}
+				if (where_select[0].data.type == 2) {
+					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
+						Tuple_s tuple;
+						int k, attr_top = 0;
+						//增加select的属性的值到输出的数组中
+						for (k = 0; k < att_data.size(); k++) {
+							if (attr_info[k].attr_name != target_name[attr_top]) {
+								continue;
+							}
+							tuple.addData(att_data[k]);
+							attr_top++;
+						}
+						select_data.push_back(tuple);
+						where_top++;
+					}
+					else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+						Tuple_s tuple;
+						int k, attr_top = 0;
+						//增加select的属性的值到输出的数组中
+						for (k = 0; k < att_data.size(); k++) {
+							if (attr_info[k].attr_name != target_name[attr_top]) {
+								continue;
+							}
+							tuple.addData(att_data[k]);
+							attr_top++;
+						}
+						select_data.push_back(tuple);
+						where_top++;
+					}
+					else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
+						Tuple_s tuple;
+						int k, attr_top = 0;
+						//增加select的属性的值到输出的数组中
+						for (k = 0; k < att_data.size(); k++) {
+							if (attr_info[k].attr_name != target_name[attr_top]) {
+								continue;
+							}
+							tuple.addData(att_data[k]);
+							attr_top++;
+						}
+						select_data.push_back(tuple);
+						where_top++;
+					}
+					else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
+						Tuple_s tuple;
+						int k, attr_top = 0;
+						//增加select的属性的值到输出的数组中
+						for (k = 0; k < att_data.size(); k++) {
+							if (attr_info[k].attr_name != target_name[attr_top]) {
+								continue;
+							}
+							tuple.addData(att_data[k]);
+							attr_top++;
+						}
+						select_data.push_back(tuple);
+						where_top++;
+					}
+					else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
@@ -497,6 +522,19 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 				}
 			}
 			//}
+			//没有条件查询
+			else if (where_select.size() == 0) {
+				Tuple_s tuple;
+				int k, attr_top = 0;
+				//增加select的属性的值到输出的数组中
+				for (k = 0; k < att_data.size(); k++) {
+					if (attr_info[k].attr_name != target_name[attr_top]) {
+						continue;
+					}
+					tuple.addData(att_data[k]);
+				}
+				select_data.push_back(tuple);
+			}
 		}
 		for (i = 0; i < select_data.size(); i++) {
 			select_data[i].showTuple();
@@ -508,7 +546,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	return error;
 }
 
-Error delete_tuple(string table_name, Where where_select) {
+Error delete_tuple(string table_name, vector<Where> where_select) {
 	CatalogManager cmgr;
 	Error error;					//返回错误信息
 	//Table* table;					//表的信息
@@ -585,60 +623,63 @@ Error delete_tuple(string table_name, Where where_select) {
 		}
 		for (j = 0; j < attr_info.size(); j++) {
 			//attribute名相同、且值相同
-			if (where_select.attr_name.compare(attr_info[j].attr_name) == 0) {
-				if (where_select.data.type == 1) {
-					if (where_select.data.datai == att_data[i].datai&&where_select.relation_character == EQUAL) {
+			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
+				if (where_select[0].data.type == 1) {
+					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datai >= att_data[i].datai&&where_select.relation_character == GREATER_OR_EQUAL) {
+					else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datai <= att_data[i].datai&&where_select.relation_character == LESS_OR_EQUAL) {
+					else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datai > att_data[i].datai&&where_select.relation_character == GREATER) {
+					else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datai < att_data[i].datai&&where_select.relation_character == LESS) {
-						bmgr.erase(filename, all_indexinfo[i]);
-					}
-				}
-				if (where_select.data.type == 2) {
-					if (where_select.data.dataf == att_data[i].datai&&where_select.relation_character == EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-					}
-					else if (where_select.data.dataf >= att_data[i].dataf&&where_select.relation_character == GREATER_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-					}
-					else if (where_select.data.dataf <= att_data[i].dataf&&where_select.relation_character == LESS_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-					}
-					else if (where_select.data.dataf > att_data[i].dataf&&where_select.relation_character == GREATER) {
-						bmgr.erase(filename, all_indexinfo[i]);
-					}
-					else if (where_select.data.dataf < att_data[i].dataf&&where_select.relation_character == LESS) {
+					else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
 				}
-				if (where_select.data.type == 2) {
-					if (where_select.data.datas == att_data[i].datas&&where_select.relation_character == EQUAL) {
+				if (where_select[0].data.type == 2) {
+					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datas >= att_data[i].datas&&where_select.relation_character == GREATER_OR_EQUAL) {
+					else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datas <= att_data[i].datas&&where_select.relation_character == LESS_OR_EQUAL) {
+					else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datas > att_data[i].datas&&where_select.relation_character == GREATER) {
+					else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
-					else if (where_select.data.datas < att_data[i].datas&&where_select.relation_character == LESS) {
+					else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
+						bmgr.erase(filename, all_indexinfo[i]);
+					}
+				}
+				if (where_select[0].data.type == 2) {
+					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
+						bmgr.erase(filename, all_indexinfo[i]);
+					}
+					else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+						bmgr.erase(filename, all_indexinfo[i]);
+					}
+					else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
+						bmgr.erase(filename, all_indexinfo[i]);
+					}
+					else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
+						bmgr.erase(filename, all_indexinfo[i]);
+					}
+					else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
 				}
 			}
 			//}
+			else if (where_select.size() == 0) {
+				bmgr.erase(filename, all_indexinfo[i]);
+			}
 		}
 		free (rawdata);
 	}
