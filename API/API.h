@@ -1,28 +1,26 @@
 #pragma once
-#include "../interpreter/basic.h"
+#include <vector>
+#include "..\miniSQL\Commonheader.h"
 #include "../RecordManager/RecordManager.h"
-#include "../BufferManager/BufferManager.h"
-#include "../CatalogManager/catalog.h"
-
 
 class API {
 public:
-	API();
-	~API();
+	API(){}
+	~API(){}
 
-	Table selectRecord(std::string table_name, std::vector<std::string> target_attr, std::vector<Where> where, char operation);
+	void selectRecord(string table_name, vector<string> target_attr, vector<Where> where, vector<bool> operations);
 
-	int deleteRecord(std::string table_name, vector<Where> where);
+	void deleteRecord(string table_name, vector<Where> where);
 
-	void insertRecord(std::string table_name, Tuple_s& tuple);
+	void insertRecord(string table_name, Tuple_s& tuple);
 
-	bool createTable(Table );
+	void createTable(Table tableInfo);
 
-	bool dropTable(std::string table_name);
+	void dropTable(string table_name);
 
-	bool createIndex(std::string table_name, std::string index_name, std::string attr_name);
+	void createIndex(string table_name, string index_name, string attr_name);
 
-	bool dropIndex(std::string table_name, std::string index_name);
+	void dropIndex(string table_name, string index_name);
 
 private:
 	
