@@ -44,8 +44,7 @@ int main () {
 		testIndex.index_type = 0;
 		testIndex.keyID = 0;
 		test.IndexBasic.push_back (testIndex);
-		Error err = cMgr.CreateTable (test);
-		if(err.isError)cout << err.info << endl;
+		cMgr.CreateTable (test);
 	}
 	
 	system ("pause");

@@ -8,35 +8,23 @@ bool CatalogManager::CheckAttrExist (string tablename, string attrname)
 	}else return false;
 }
 
-Error CatalogManager::CreateTable (Table newTable)
+void CatalogManager::CreateTable (Table newTable)
 {
-	Error error;
 	if (getTableinfo (newTable.tablename)) {
-		error.isError = true;
-		error.info = "Table '" + newTable.tablename + "' already exists";
-		return error;
+		string tmp = "Table '" + newTable.tablename + "' already exists";
+		throw new exception (tmp.c_str ());
 	}
 	DatabaseInfo[newTable.tablename] = newTable;
-	error.isError = false;
-	error.info = "Success : 0 row(s) affected";
-	return error;
 }
 
-Error CatalogManager::DropTable (string table_name)
+void CatalogManager::DropTable (string table_name)
 {
-	Error error;
 	if (DatabaseInfo.find(table_name) == DatabaseInfo.end()) {
-		error.isError = true;
-		error.info = "Unknown Table '" + table_name + "'";
-		//printf("Unknown Table \"%s\"\n",tablename.c_str());
-		return error;
+		string tmp = "Unknown Table '" + table_name + "'";
+		throw new exception (tmp.c_str());
 	}
 	DatabaseInfo.find (table_name)->second.release();
 	DatabaseInfo.erase (table_name);
-	error.isError = false;
-	error.info = "Success : 0row(s) affected";
-	//printf("Success : 0row(s) affected\n");
-	return error;
 }
 
 CatalogManager::CatalogManager ()
@@ -69,6 +57,11 @@ CatalogManager::~CatalogManager ()
 		fs << size << " " << tmp << endl;
 	}
 	fs.close ();
+}
+
+bool CatalogManager::CheckTableExist (string table_name)
+{
+	return DatabaseInfo.find (table_name) != DatabaseInfo.end ();
 }
 
 Attribute & Table::getPrimaryKeyInfo ()
@@ -151,34 +144,26 @@ bool CatalogManager::CheckIndexExist (string index_name, string table_name)
 	return tmp->getIndexinfo (index_name);
 }
 
-Error CatalogManager::CreateIndex (index index, string table_name)
+void CatalogManager::CreateIndex (index index, string table_name)
 {
-	Error error;
 	Table* tmp = getTableinfo (table_name);
 	if (!tmp) {
-		error.isError = true;
-		error.info = "Table '" + table_name + "' doesn't exist";
-		return error;
+		string tmp = "Table '" + table_name + "' doesn't exist";
+		throw new exception (tmp.c_str ());
 	}
 	if (index.keyID >= tmp->attr_num) {
-		error.isError = true;
-		error.info = "Key column doesn't exist in table";
-		return error;
+		string tmp = "Key column doesn't exist in table";
+		throw new exception (tmp.c_str ());
 	}
 	if (CheckIndexExist (index.index_name, table_name)) {
-		error.isError = true;
-		error.info = "Duplicate key name '" + index.index_name + "'";
-		return error;
+		string tmp = "Duplicate key name '" + index.index_name + "'";
+		throw new exception (tmp.c_str ());
 	}
 	tmp->IndexBasic.push_back (index);
-	error.isError = false;
-	error.info = "0row(s) affected, Records: 0 ,Duplicates :0, Warning :0";
-	return error;
 }
 
-Error CatalogManager::Dropindex (string index_name)
+void CatalogManager::Dropindex (string index_name)
 {
-	Error error;
 	Table* table = nullptr;
 	for (auto i = DatabaseInfo.begin (); i != DatabaseInfo.end (); i++) {
 		index* tmp = i->second.getIndexinfo (index_name);
@@ -188,25 +173,20 @@ Error CatalogManager::Dropindex (string index_name)
 		}
 	}
 	if (!table) {
-		error.isError = true;
-		error.info = "index '" + index_name + "' not exist";
-		return error;
+		string tmp = "index '" + index_name + "' not exist";
+		throw new exception (tmp.c_str ());
 	}
 	for (auto i = table->IndexBasic.begin(); i != table->IndexBasic.end(); i++) {
 		if (i->index_name == index_name) {
 			if (table->attr[i->keyID].primary) {
-				error.isError = true;
-				error.info = "primary index '" + index_name + "' could not be dropped";
-				return error;
+				string tmp = "primary index '" + index_name + "' could not be dropped";
+				throw new exception (tmp.c_str ());
 			}
 			remove (i->index_file.c_str ());
 			table->IndexBasic.erase (i);
 			break;
 		}
 	}
-	error.isError = false;
-	error.info = "0row(s) affected, Records: 0 ,Duplicates :0, Warning :0";
-	return error;
 }
 
 Table * CatalogManager::getTableinfo (string table_name)

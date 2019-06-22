@@ -305,7 +305,8 @@ void Interpreter::EXEC_INSERT() {
 	check_index += 8;
 	if (query[check_index] != '(')
 		throw input_format_error();
-	if (!CheckTableExist(table_name)) {
+	CatalogManager cMgr;
+	if (!cMgr.CheckTableExist(table_name)) {
 		throw table_not_exist();
 	}
 	//attr_exist = CM.getAttribute(table_name);

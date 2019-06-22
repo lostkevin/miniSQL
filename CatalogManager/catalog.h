@@ -65,8 +65,7 @@ public:
 class CatalogManager {
 	map<string, Table> DatabaseInfo;
 	//不知道有什么用，检查某属性是否存在
-	bool CheckAttrExist (string tablename, string attrname);
-	bool CheckIndexExist (string index_name, string table_name);
+
 	Table* getTableinfo (string table_name);
 public:
 	//读取整个table的attribute信息
@@ -78,16 +77,19 @@ public:
 	//获取keyID，理论上建立表时的输入顺序即为keyID，但为了防止遗忘，提供一个接口
 	int getKeyID (string attr_name, string table_name);
 	//在表上创建索引，失败返回错误信息
-	Error CreateIndex (index index, string table_name);
+	void CreateIndex (index index, string table_name);
 	//删除特定索引及其文件，失败返回错误信息
-	Error Dropindex (string index_name);
+	void Dropindex (string index_name);
 	//创建新表，失败返回错误信息
-	Error CreateTable (Table info);
+	void CreateTable (Table info);
 	//删除某表及所有相关文件，失败返回错误信息
-	Error DropTable (string table_name);
+	void DropTable (string table_name);
 	//构造时从文件中读取数据库信息
 	CatalogManager ();
 	//析构时把数据库信息保存到硬盘上
 	~CatalogManager ();
+	bool CheckTableExist (string table_name);
+	bool CheckAttrExist (string table_name, string attrname);
+	bool CheckIndexExist (string index_name, string table_name);
 };
 

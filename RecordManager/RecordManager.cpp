@@ -90,7 +90,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	//所有tuple逐个对比
 	for (i = 0; i < all_indexinfo.size(); i++) {
 		//逐个读取rawdata
-		char* rawdata;
+		char* rawdata = new BYTE[PAGE_SIZE]{ 0 };
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
@@ -111,6 +111,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			else {
 				temp.datas = attr_rawdata;
 			}
+			free (attr_rawdata);
 			att_data.push_back(temp);
 		}
 		//将该tuple与插入的数据对比，是否冲突
@@ -137,6 +138,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 				}
 			}
 		}
+		free (rawdata);
 	}
 
 	//没有冲突，插入数据
@@ -175,7 +177,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 		}
 		//对返回的索引，逐个更新,若该data需要插入index，则更新
 		int j;
-		for (j = 0; j < index_info.size; j++) {
+		for (j = 0; j < index_info.size(); j++) {
 			//通过catalog获取indexfilename
 			string indexfilename = index_info[j].index_file;
 			int n = index_info[j].keyID;
@@ -249,7 +251,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	//所有tuple逐个对比
 	for (i = 0; i < all_indexinfo.size(); i++) {
 		//逐个读取rawdata
-		char* rawdata;
+		char* rawdata = new BYTE[PAGE_SIZE]{ 0 };
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
@@ -271,6 +273,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 				temp.datas = attr_rawdata;
 			}
 			att_data.push_back(temp);
+			free (attr_rawdata);
 		}
 		
 		for (j = 0; j < attr_info.size();j++) {
@@ -281,7 +284,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -295,7 +298,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -309,7 +312,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -323,7 +326,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -337,7 +340,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -353,7 +356,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -367,7 +370,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -381,7 +384,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -395,7 +398,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -409,7 +412,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -425,7 +428,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -439,7 +442,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -453,7 +456,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -467,7 +470,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -481,7 +484,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 						Tuple_s tuple;
 						int k, attr_top = 0;
 						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size; k++) {
+						for (k = 0; k < att_data.size(); k++) {
 							if (attr_info[k].attr_name != target_name[attr_top]) {
 								continue;
 							}
@@ -495,11 +498,14 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 			}
 			//}
 		}
-		for (i = 0; i < select_data.size; i++) {
-			select_data[i].showTuple;
+		for (i = 0; i < select_data.size(); i++) {
+			select_data[i].showTuple();
 		}
 		//std::cout << "No!\n";
+		free (rawdata);
 	}
+	//这个error甚至没有初始化 By Kevin
+	return error;
 }
 
 Error delete_tuple(string table_name, Where where_select) {
@@ -553,7 +559,7 @@ Error delete_tuple(string table_name, Where where_select) {
 	//所有tuple逐个对比
 	for (i = 0; i < all_indexinfo.size(); i++) {
 		//逐个读取rawdata
-		char* rawdata;
+		char* rawdata = new BYTE[PAGE_SIZE];
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
@@ -575,6 +581,7 @@ Error delete_tuple(string table_name, Where where_select) {
 				temp.datas = attr_rawdata;
 			}
 			att_data.push_back(temp);
+			free (attr_rawdata);
 		}
 		for (j = 0; j < attr_info.size(); j++) {
 			//attribute名相同、且值相同
@@ -633,14 +640,16 @@ Error delete_tuple(string table_name, Where where_select) {
 			}
 			//}
 		}
-
-		error.info = "DELETE TUPLE SUCCESS!";
+		free (rawdata);
 	}
+	error.isError = false;
+	error.info = "DELETE TUPLE SUCCESS!";
+	return error;
 }
 	
 	
 char* getword(int offset, int length, char *rawdata) {
-		char *res;
+	char *res = new BYTE[length + 2]{ 0 };
 		int i;
 
 		for (i = offset; i < offset + length; i++) {

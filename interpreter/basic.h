@@ -1,10 +1,8 @@
 ﻿#pragma once
-
-
-#ifndef _BASIC_H_
-#define _BASIC_H_ 1
 #include <iostream>
 #include <vector>
+#include <string>
+using namespace std;
 
 //用于where的判断 分别为小于，小于等于，等于，大于等于，大于，不等于
 typedef enum {
@@ -23,7 +21,7 @@ struct Data {
 	int type;
 	int datai;
 	float dataf;
-	std::string datas;
+	string datas;
 };
 
 //Where存放一组判断语句
@@ -93,6 +91,3 @@ public:
 	void showTable(); //显示table的部分数据
 	void showTable(int limit);
 };
-
-
-#endif
