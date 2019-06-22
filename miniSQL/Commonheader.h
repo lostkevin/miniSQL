@@ -1,6 +1,8 @@
 #pragma once
 //这是公共定义文件
 //有啥宏都可以丢这里
+#include <iostream>
+#include <vector>
 #include <string>
 using namespace std;
 //缓冲块数目
@@ -65,6 +67,50 @@ enum TreeTYPE {
 	INT,
 	FLOAT,
 	STRING
+};
+
+//用于where的判断 分别为小于，小于等于，等于，大于等于，大于，不等于
+typedef enum {
+	LESS,
+	LESS_OR_EQUAL,
+	EQUAL,
+	GREATER_OR_EQUAL,
+	GREATER,
+	NOT_EQUAL
+} WHERE;
+
+//一个struct存放它的一条信息的类型和值
+//用一个strunt嵌套一个union实现多种类型的转换
+//type的类型：1：int,2:float,1-255:string(数值为字符串的长度+1),注意使用时对Value的选择！
+struct Data {
+	int type;
+	int datai;
+	float dataf;
+	string datas;
+};
+
+//Where存放一组判断语句
+struct Where {
+	string attr_name;
+	Data data; //数据
+	WHERE relation_character;   //关系
+};
+
+//在确定类型时，慎用str.size()+1来决定str的type的值，一张表最多32个attribute
+struct Attribute_s {
+	int num;  //存放table的属性数
+	std::string name[32];  //存放每个属性的名字
+	short type[32];  //存放每个属性的类型，-1：int,0:float,1~255:string的长度+1
+	bool unique[32];  //判断每个属性是否unique，是为true
+	short primary_key;  //判断是否存在主键,-1为不存在，其他则为主键的所在位置
+	bool has_index[32]; //判断是否存在索引
+};
+
+//索引管理，一张表最多只能有10个index
+struct Index_s {
+	int num;  //index的总数
+	short location[10];  //每个index在Attribute的name数组中是第几个
+	std::string indexname[10];  //每个index的名字
 };
 
 using namespace std;

@@ -35,5 +35,11 @@
     <ClCompile Include="test_interpreter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\CatalogManager\catalog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\api.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

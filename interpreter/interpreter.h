@@ -6,10 +6,8 @@
 #include <string>
 #include <cmath>
 #include <fstream>
-//#include "catalog_manager.h"
-//#include "api.h"
-#include "basic.h"
 #include "exception.h"
+#include "basic.h"
 #include "../CatalogManager/catalog.h"
 #include "../API/api.h"
 

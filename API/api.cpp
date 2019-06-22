@@ -4,14 +4,15 @@
 
 
 
-void API::selectRecord (string table_name, vector<string>& target_attr, vector<Where>& where, vector<bool>& operation)
+void API::selectRecord (string table_name, vector<string> target_attr, vector<Where> where, vector<bool> operations)
 {
 	if (!where.size ()) throw new exception ("null condition!");
-	select_tuple (table_name, target_attr, where[0]);
+	select_tuple (table_name, target_attr, where, operations);
 }
 
-void API::deleteRecord (string table_name, Where where)
+void API::deleteRecord (string table_name, vector<Where> where)
 {
+	if (!where.size ()) throw new exception ("null condition!");
 	delete_tuple (table_name, where);
 }
 

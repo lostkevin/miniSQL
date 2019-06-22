@@ -206,7 +206,9 @@ void Interpreter::EXEC_DELETE() {
 	//删除整张表
 	if (query[check_index + 1] == '\0') {
 		attr_name = "";
-		API.deleteRecord(table_name, where_delete);
+		vector<Where> tmp;
+		tmp.push_back (where_delete);
+		API.deleteRecord (table_name, tmp);
 		std::cout << "      > SUCCESS" << std::endl;
 		return;
 	}
@@ -272,7 +274,9 @@ void Interpreter::EXEC_DELETE() {
 			break;
 		}
 	}
-	API.deleteRecord(table_name, where_delete);
+	vector<Where> tmp;
+	tmp.push_back (where_delete);
+	API.deleteRecord(table_name, tmp);
 	std::cout << "      > SUCCESS" << std::endl;
 }
 
@@ -400,8 +404,10 @@ void Interpreter::EXEC_SELECT() {
 		}
 	}
 	check_index++;
+	vector<bool> Operations;
+	Operations.push_back (op);
 	if (query[check_index] == '\0')
-		API.selectRecord(table_name, target_name, where_select, op);
+		API.selectRecord(table_name, target_name, where_select, Operations);
 	//带有where子句
 	else {
 		if (getLower(query, check_index).substr(check_index, 5) != "where")
@@ -480,8 +486,9 @@ void Interpreter::EXEC_SELECT() {
 			getWord(check_index + 1, check_index);
 			check_index++;
 		}
-
-		API.selectRecord(table_name, target_name, where_select, op);
+		vector<bool> Operations;
+		Operations.push_back (op);
+		API.selectRecord(table_name, target_name, where_select, Operations);
 	}
 }
 

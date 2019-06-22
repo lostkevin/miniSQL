@@ -1,9 +1,6 @@
-﻿// RecordManager.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
-//
-
-#include <iostream>
+﻿#include <iostream>
+//#include <cstring>
 #include "RecordManager.h"
-#include <cstring>
 
 string tostring(Tuple tuple) {
 
@@ -200,7 +197,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	//std::cout << "No!\n";
 }
 
-Error select_tuple(string table_name, vector<std::string> target_name, vector<Where> where_select,bool operation) {
+Error select_tuple(string table_name, vector<std::string> target_name, vector<Where> where_select,vector<bool> Operations) {
 	CatalogManager cmgr;
 	Error error;					//返回错误信息
 	//Table* table;					//表的信息
@@ -212,6 +209,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		获取表的相关信息，包括attribute、index。
 		获取插入的tuple的信息，只包含data的type和值
 	*/
+	bool operation = Operations[0];
 	cmgr.getAttrInfo(table_name, attr_info);
 	cmgr.getIndex(table_name, index_info);
 
@@ -687,7 +685,6 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 	error.info = "DELETE TUPLE SUCCESS!";
 	return error;
 }
-	
 	
 char* getword(int offset, int length, char *rawdata) {
 	char *res = new BYTE[length + 2]{ 0 };

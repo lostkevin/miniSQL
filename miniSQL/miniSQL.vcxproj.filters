@@ -29,5 +29,23 @@
     <ClCompile Include="..\interpreter\interpreter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\CatalogManager\catalog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\API\api.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\BufferManager\BufferManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\IndexManager\IndexManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\interpreter\basic.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\RecordManager\RecordManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -156,6 +156,8 @@
     <ClInclude Include="exception.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\API\api.cpp" />
+    <ClCompile Include="..\CatalogManager\catalog.cpp" />
     <ClCompile Include="basic.cpp" />
     <ClCompile Include="interpreter.cpp" />
     <ClCompile Include="test_interpreter.cpp" />

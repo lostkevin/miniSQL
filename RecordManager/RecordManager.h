@@ -1,7 +1,7 @@
 #pragma once
 #include<sstream>
-#include "../CatalogManager/catalog.h"
 #include "../interpreter/basic.h"
+#include "../CatalogManager/catalog.h"
 #include"../IndexManager/IndexManager.h"
 
 class Tuple : public Table {
@@ -36,6 +36,6 @@ public:
 
 
 Error Insert_tuple(std::string table_name, Tuple_s insert_tuple);
-Error select_tuple(string table_name, vector<std::string> target_name, Where where_select);
-Error delete_tuple(string table_name, Where where_select);
+Error select_tuple (string table_name, vector<std::string> target_name, vector<Where> where_select, vector<bool> Operations);
+Error delete_tuple (string table_name, vector<Where> where_select);
 char* getword(int offset, int length, char *rawdata);
