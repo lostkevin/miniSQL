@@ -1,7 +1,7 @@
 #pragma once
+#include<sstream>
 #include"catalog.h"
 #include "../interpreter/basic.h"
-#include<sstream>
 #include"../IndexManager/IndexManager.h"
 
 class Tuple : public Table {
