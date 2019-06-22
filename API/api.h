@@ -12,7 +12,7 @@ public:
 
 	Table selectRecord(std::string table_name, std::vector<std::string> target_attr, std::vector<Where> where, char operation);
 
-	int deleteRecord(std::string table_name, Where where);
+	int deleteRecord(std::string table_name, vector<Where> where);
 
 	void insertRecord(std::string table_name, Tuple_s& tuple);
 
