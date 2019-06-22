@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+#include "..\miniSQL\Commonheader.h"
 #include "../interpreter/basic.h"
 #include "../RecordManager/RecordManager.h"
 #include "../BufferManager/BufferManager.h"
@@ -7,22 +9,23 @@
 
 class API {
 public:
-	API();
-	~API();
+	API () {}
+	~API () {}
 
-	Table selectRecord(std::string table_name, std::vector<std::string> target_attr, std::vector<Where> where, char operation);
 
-	int deleteRecord(std::string table_name, Where where);
+	void selectRecord(string table_name, vector<string>& target_attr, vector<Where>& where, vector<bool>& operation);
 
-	void insertRecord(std::string table_name, Tuple_s& tuple);
+	void deleteRecord(string table_name, Where where);
 
-	bool createTable(Table );
+	void insertRecord(string table_name, Tuple_s& tuple);
 
-	bool dropTable(std::string table_name);
+	void createTable(Table tableInfo);
 
-	bool createIndex(std::string table_name, std::string index_name, std::string attr_name);
+	void dropTable(string table_name);
 
-	bool dropIndex(std::string table_name, std::string index_name);
+	void createIndex(string table_name, string index_name, string attr_name);
+
+	void dropIndex(string index_name, string table_name);
 
 private:
 	
