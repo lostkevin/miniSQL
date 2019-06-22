@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="catalog.cpp" />
+    <ClCompile Include="test_catalogManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="catalog.h" />

@@ -64,7 +64,6 @@ public:
 
 class CatalogManager {
 	map<string, Table> DatabaseInfo;
-	CatalogManager ();
 	//不知道有什么用，检查某属性是否存在
 	bool CheckAttrExist (string tablename, string attrname);
 	bool CheckIndexExist (string index_name, string table_name);
@@ -72,6 +71,12 @@ class CatalogManager {
 public:
 	//读取整个table的attribute信息
 	void getAttrInfo (string table_name, vector<Attribute>& attributsInfo);
+	//读取table的index信息
+	void getIndex (string table_name, vector<index>& index);
+	//读取key是否为unique，参数不正确返回false
+	bool getUniqueState (string attr_name, string table_name);
+	//获取keyID，理论上建立表时的输入顺序即为keyID，但为了防止遗忘，提供一个接口
+	int getKeyID (string attr_name, string table_name);
 	//在表上创建索引，失败返回错误信息
 	Error CreateIndex (index index, string table_name);
 	//删除特定索引及其文件，失败返回错误信息

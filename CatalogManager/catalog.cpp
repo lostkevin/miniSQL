@@ -12,7 +12,6 @@ Error CatalogManager::CreateTable (Table newTable)
 {
 	Error error;
 	if (getTableinfo (newTable.tablename)) {
-		//printf("Error : Table \"%s\" already exists\n",newtable.tablename.c_str());
 		error.isError = true;
 		error.info = "Table '" + newTable.tablename + "' already exists";
 		return error;
@@ -45,10 +44,11 @@ CatalogManager::CatalogManager ()
 	ifstream fs (".\\Catalog.dat");
 	if (fs) {
 		uint tableSize = 0;
-		fs.read ((char*)&tableSize, sizeof (uint));
+		fs >> tableSize;
 		for (uint i = 0; i < tableSize; i++) {
 			uint size = 0;
-			char * tmpData = new char[size] {0};
+			fs >> size;
+			char * tmpData = new char[size + 10] {0};
 			fs.getline (tmpData, size);
 			Table tmp = Table (string (tmpData));
 			DatabaseInfo[tmp.tablename] = tmp;
@@ -62,12 +62,11 @@ CatalogManager::~CatalogManager ()
 {
 	ofstream fs (".\\Catalog.dat");
 	uint tableSize = DatabaseInfo.size ();
-	fs.write ((char *)&tableSize, sizeof (uint));
+	fs << tableSize << endl;
 	for (auto iter = DatabaseInfo.begin (); iter != DatabaseInfo.end (); iter++) {
 		string tmp = iter->second.ToString ();
-		uint size = tmp.length () + sizeof (uint) + 20;
-		fs.write ((char *)&size, sizeof (uint));
-		fs.write (tmp.c_str (), tmp.length () + 1);
+		uint size = tmp.length () + 3;
+		fs << size << " " << tmp << endl;
 	}
 	fs.close ();
 }
@@ -118,7 +117,6 @@ string Table::ToString ()
 			<< IndexBasic[i].index_type << " "
 			<< IndexBasic[i].keyID << " ";
 	}
-	os << "\n";
 	return os.str();
 }
 
@@ -220,4 +218,38 @@ void CatalogManager::getAttrInfo (string table_name, vector<Attribute>& attribut
 	for (uint i = 0; i < tmp->attr_num; i++) {
 		attributsInfo.push_back (tmp->attr[i]);
 	}
+}
+
+void CatalogManager::getIndex (string table_name, vector<index>& index)
+{
+	Table* tmp = getTableinfo (table_name);
+	if (tmp) {
+		index = tmp->IndexBasic;
+	}
+}
+
+bool CatalogManager::getUniqueState (string attr_name, string table_name)
+{
+	Table* tmp = getTableinfo (table_name);
+	if (tmp) {
+		for (uint i = 0; i < tmp->attr_num; i++) {
+			if (tmp->attr[i].attr_name == attr_name) {
+				return tmp->attr[i].unique;
+			}
+		}
+	}
+	return false;
+}
+
+int CatalogManager::getKeyID (string attr_name, string table_name)
+{
+	Table* tmp = getTableinfo (table_name);
+	if (tmp) {
+		for (uint i = 0; i < tmp->attr_num; i++) {
+			if (tmp->attr[i].attr_name == attr_name) {
+				return (int)i;
+			}
+		}
+	}
+	return -1;
 }

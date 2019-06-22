@@ -23,5 +23,8 @@
     <ClCompile Include="catalog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="test_catalogManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
