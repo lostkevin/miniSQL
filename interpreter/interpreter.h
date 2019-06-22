@@ -10,6 +10,8 @@
 //#include "api.h"
 #include "basic.h"
 #include "exception.h"
+#include "../CatalogManager/catalog.h"
+#include "../API/api.h"
 
 class Interpreter {
 public:

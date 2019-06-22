@@ -58,7 +58,6 @@ public:
 	Table (string TableData);
 	//将table信息储存到字符串中
 	string ToString ();
-	//不知道有什么用，检查某属性是否存在
 	bool IsAttrExist (string attr_name);
 };
 

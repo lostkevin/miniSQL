@@ -6,9 +6,10 @@ Interpreter::Interpreter() {
 //将query进行赋值
 void Interpreter::getQuery() {
 	std::string tmp;
+	std::cout << "mysql > ";
 	//得到一行的所有字符，当最后一个字符为分号时结束
 	do {
-		std::cout << ">>> ";
+		std::cout << "      > ";
 		getline(std::cin, tmp);
 		query += tmp;
 		query += ' ';
@@ -139,8 +140,8 @@ void Interpreter::EXEC() {
 }
 
 void Interpreter::EXEC_CREATE_INDEX() {
-	//CatalogManager CM;
-	//API API;
+	CatalogManager CM;
+	API API;
 	std::string index_name;
 	std::string table_name;
 	std::string attr_name;
@@ -150,20 +151,19 @@ void Interpreter::EXEC_CREATE_INDEX() {
 	if (getLower(query, check_index).substr(check_index, 2) != "on")
 		throw 1;//格式错误
 	table_name = getWord(check_index + 3, check_index);
-	//if (!CM.hasTable(table_name))
-	//	throw table_not_exist();//table not exist
+	if (!CM.CheckTableExist(table_name))
+		throw table_not_exist();//table not exist
 	if (query[check_index + 1] != '(')
 		throw 1;//格式错误
 	attr_name = getWord(check_index + 3, check_index);
 	if (query[check_index + 1] != ')' || query[check_index + 3] != '\0')
 		throw 1;//格式错误
-	//API.createIndex(table_name, index_name, attr_name);
-	std::cout << "create index" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	API.createIndex(table_name, index_name, attr_name);
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
 void Interpreter::EXEC_DROP_INDEX() {
-	//API API;
+	API API;
 	std::string table_name;
 	std::string index_name;
 	int check_index;
@@ -178,9 +178,9 @@ void Interpreter::EXEC_DROP_INDEX() {
 	//如果table的名字之后有多余字符串，则是格式错误
 	if (query[check_index + 1] != '\0')
 		throw 1;//输入错误
-	//API.dropIndex(table_name, index_name);
-	std::cout << "drop index" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	API.dropIndex(table_name, index_name);
+	//std::cout << "drop index" << std::endl;
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
 void Interpreter::EXEC_EXIT() {
@@ -188,24 +188,9 @@ void Interpreter::EXEC_EXIT() {
 	throw exit_command();
 }
 
-void Interpreter::EXEC_SHOW() {
-	//CatalogManager CM;
-	std::string table_name;
-	int check_index;
-	//得到第一个单词的结束的位置
-	getWord(0, check_index);
-	//得到表的名字
-	table_name = getWord(check_index + 1, check_index);
-	//出现多余的字符串，格式错误
-	if (query[check_index + 1] != '\0')
-		throw 1;//输入错误
-	//CM.showTable(table_name);
-	std::cout << "show table" << std::endl;
-}
-
 void Interpreter::EXEC_DELETE() {
-	//API API;
-	//CatalogManager CM;
+	API API;
+	CatalogManager CM;
 	Where where_delete;
 	int check_index;
 	std::string table_name;
@@ -214,16 +199,15 @@ void Interpreter::EXEC_DELETE() {
 	if (getLower(query, 7).substr(7, 4) != "from")
 		throw 1;
 	table_name = getWord(12, check_index);
-	//if (!CM.hasTable(table_name))
-	//	throw table_not_exist();
+	if (!CM.CheckTableExist(table_name))
+		throw table_not_exist();
 
 
 	//处理删除所有信息的情况
 	//删除整张表
 	if (query[check_index + 1] == '\0') {
 		attr_name = "";
-		//API.deleteRecord(table_name, attr_name, where_delete);
-		std::cout << "delete table record" << std::endl;
+		API.deleteRecord(table_name, where_delete);
 		std::cout << ">>> SUCCESS" << std::endl;
 		return;
 	}
@@ -231,8 +215,8 @@ void Interpreter::EXEC_DELETE() {
 	if (getLower(query, check_index + 1).substr(check_index + 1, 5) != "where")
 		throw 1;//格式错误
 	attr_name = getWord(check_index + 7, check_index);
-	//if (!CM.hasAttribute(table_name, attr_name))
-	//	throw attribute_not_exist();
+	if (!CM.CheckAttrExist(table_name, attr_name))
+		throw attribute_not_exist();
 	relation = getRelation(check_index + 1, check_index);
 	if (relation == "<")
 		where_delete.relation_character = LESS;
@@ -250,13 +234,16 @@ void Interpreter::EXEC_DELETE() {
 		throw 1;//格式错误
 	std::string value_delete = getWord(check_index + 1, check_index);
 
-	/*Attribute tmp_attr = CM.getAttribute(table_name);
-	for (int i = 0; i < tmp_attr.num; i++)
+	vector<Attribute> tmp_attr;
+	CM.getAttrInfo(table_name,tmp_attr);
+	for (int i = 0; i < tmp_attr.size(); i++)
 	{
-		if (attr_name == tmp_attr.name[i]) {
-			where_delete.data.type = tmp_attr.type[i];
+		//where子句中的属性名与table中的属性名对应，添加到where条件
+		if (attr_name == tmp_attr[i].attr_name) {
+			where_delete.data.type = tmp_attr[i].attr_type;
+			where_delete.attr_name = attr_name;
 			switch (where_delete.data.type) {
-			case -1:
+			case 1:
 				try {
 					where_delete.data.datai = stringToNum<int>(value_delete);
 				}
@@ -264,7 +251,7 @@ void Interpreter::EXEC_DELETE() {
 					throw data_type_conflict();//转换失败
 				}
 				break;
-			case 0:
+			case 2:
 				try {
 					where_delete.data.dataf = stringToNum<float>(value_delete);
 				}
@@ -286,17 +273,16 @@ void Interpreter::EXEC_DELETE() {
 			break;
 		}
 	}
-	API.deleteRecord(table_name, attr_name, where_delete);*/
-	std::cout << "delete records with condition" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	API.deleteRecord(table_name, where_delete);
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
 void Interpreter::EXEC_INSERT() {
-	//API API;
+	API API;
 	std::string table_name;
 	int check_index;
 	Tuple_s tuple_insert;
-	Attribute attr_exist;
+	vector<Attribute> attr_exist;
 	if (getLower(query, 7).substr(7, 4) != "into")
 		throw input_format_error();
 	table_name = getWord(12, check_index);
@@ -309,19 +295,19 @@ void Interpreter::EXEC_INSERT() {
 	if (!cMgr.CheckTableExist(table_name)) {
 		throw table_not_exist();
 	}
-	//attr_exist = CM.getAttribute(table_name);
+	cMgr.getAttrInfo(table_name, attr_exist);
 	check_index--;
 	int num_of_insert = 0;
 	//对括号内的所有元素进行遍历
-	/*while (query[check_index + 1] != '\0'&&query[check_index + 1] != ')') {
-		//if (num_of_insert >= attr_exist.num)
-		//	throw 1;//属性数不匹配
+	while (query[check_index + 1] != '\0'&&query[check_index + 1] != ')') {
+		if (num_of_insert >= attr_exist.size())
+			throw 1;//属性数不匹配
 		check_index += 3;
 		std::string value_insert = getWord(check_index, check_index);
 		Data insert_data;
-		insert_data.type = attr_exist.type[num_of_insert];
-		switch (attr_exist.type[num_of_insert]) {
-		case -1:
+		insert_data.type = attr_exist[num_of_insert].attr_type;
+		switch (attr_exist[num_of_insert].attr_type) {
+		case 1:
 			try {
 				insert_data.datai = stringToNum<int>(value_insert);
 			}
@@ -329,7 +315,7 @@ void Interpreter::EXEC_INSERT() {
 				throw data_type_conflict();//转换失败
 			}
 			break;
-		case 0:
+		case 2:
 			try {
 				insert_data.dataf = stringToNum<float>(value_insert);
 			}
@@ -341,7 +327,7 @@ void Interpreter::EXEC_INSERT() {
 			try {
 				if (!(value_insert[0] == '\''&&value_insert[value_insert.length() - 1] == '\'') && !(value_insert[0] == '"'&&value_insert[value_insert.length() - 1] == '"'))
 					throw input_format_error();//格式不正确
-				if (value_insert.length() - 1 > attr_exist.type[num_of_insert])
+				if (value_insert.length() - 1 > attr_exist[num_of_insert].attr_type)
 					throw input_format_error();//长度超过限制
 				insert_data.datas = value_insert.substr(1, value_insert.length() - 2);
 			}
@@ -356,20 +342,17 @@ void Interpreter::EXEC_INSERT() {
 		tuple_insert.addData(insert_data);
 		num_of_insert++;
 	}
-	*/
-	//if (query[check_index + 1] == '\0')
-	//	throw input_format_error();//格式错误
-	//if (num_of_insert != attr_exist.num)
-	//	throw input_format_error();//插入的数量不正确
-	//API.insertRecord(table_name, tuple_insert);
-	std::cout << "insert success" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	if (query[check_index + 1] == '\0')
+		throw input_format_error();//格式错误
+	if (num_of_insert != attr_exist.size())
+		throw input_format_error();//插入的数量不正确
+	API.insertRecord(table_name, tuple_insert);
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
-//还需要table的显示
 void Interpreter::EXEC_SELECT() {
-	//API API;
-	//CatalogManager CM;
+	API API;
+	CatalogManager CM;
 	std::string table_name;
 	std::vector<std::string> attr_name;		//select部分字段值时，记录这些字段名
 	std::vector<std::string> target_name;	//where子句后面，字段名，用数组记录
@@ -401,27 +384,25 @@ void Interpreter::EXEC_SELECT() {
 		throw input_format_error();//格式错误
 	check_index += 5;
 	table_name = getWord(check_index, check_index);
-	//if (!CM.hasTable(table_name))
-	//	throw table_not_exist();
-	//Attribute_s tmp_attr = CM.getAttribute(table_name);
-	/*
+	if (!CM.CheckTableExist(table_name))
+		throw table_not_exist();
+	vector<Attribute> tmp_attr;
+	CM.getAttrInfo(table_name, tmp_attr);
 	if (!flag) {
 		//查找所有属性
 		for (int index = 0; index < attr_name.size(); index++) {
-			if (!CM.hasAttribute(table_name, attr_name[index]))
+			if (!CM.CheckAttrExist(table_name, attr_name[index]))
 				throw attribute_not_exist();
 		}
 	}
 	else {
-		//存疑，此处tmp_attr或许是输入的字段值，此处与attr_name混淆了
-		for (int index = 0; index < tmp_attr.num; index++) {
-			attr_name.push_back(tmp_attr.name[index]);
+		for (int index = 0; index < tmp_attr.size(); index++) {
+			attr_name.push_back(tmp_attr[index].attr_name);
 		}
-	}*/
+	}
 	check_index++;
 	if (query[check_index] == '\0')
-		//output_table = API.selectRecord(table_name, target_name, where_select, op);
-		std::cout << "select success" << std::endl;
+		API.selectRecord(table_name, target_name, where_select, op);
 	//带有where子句
 	else {
 		if (getLower(query, check_index).substr(check_index, 5) != "where")
@@ -449,14 +430,13 @@ void Interpreter::EXEC_SELECT() {
 				throw input_format_error();//格式错误
 			tmp_value = getWord(check_index + 1, check_index);	//属性值
 			//逐个条件检验类型等是否满足
-			/*for (int i = 0; i < tmp_attr.num; i++)
+			for (int i = 0; i < tmp_attr.size(); i++)
 			{
-				if (tmp_target_name == tmp_attr.name[i]) {
-					tmp_where.data.type = tmp_attr.type[i];
-					//Attribute_s tmp_attr;
-					//tmp_where.attr_name = tmp_attr.name;
+				if (tmp_target_name == tmp_attr[i].attr_name) {
+					tmp_where.data.type = tmp_attr[i].attr_type;
+					tmp_where.attr_name = tmp_attr[i].attr_name;
 					switch (tmp_where.data.type) {
-					case -1:
+					case 1:
 						try {
 							tmp_where.data.datai = stringToNum<int>(tmp_value);
 						}
@@ -464,7 +444,7 @@ void Interpreter::EXEC_SELECT() {
 							throw data_type_conflict();//转换失败
 						}
 						break;
-					case 0:
+					case 2:
 						try {
 							tmp_where.data.dataf = stringToNum<float>(tmp_value);
 						}
@@ -489,7 +469,6 @@ void Interpreter::EXEC_SELECT() {
 					break;
 				}
 			}
-			*/
 			where_select.push_back(tmp_where);
 			if (query[check_index + 1] == '\0')
 				break;
@@ -503,152 +482,8 @@ void Interpreter::EXEC_SELECT() {
 			check_index++;
 		}
 
-		//output_table = API.selectRecord(table_name, target_name, where_select, op);
-		std::cout << "select with condition success" << std::endl;
+		API.selectRecord(table_name, target_name, where_select, op);
 	}
-
-	//以下是输出函数
-
-	/*Attribute attr_record = output_table.attr_;
-	int use[32] = { 0 };
-	if (attr_name.size() == 0) {
-		for (int i = 0; i < attr_record.num; i++)
-			use[i] = i;
-	}
-	else {
-		for (int i = 0; i < attr_name.size(); i++)
-			for (int j = 0; j < attr_record.num; j++) {
-				if (attr_record.name[j] == attr_name[i])
-				{
-					use[i] = j;
-					break;
-				}
-			}
-	}
-	std::vector<Tuple> output_tuple = output_table.getTuple();
-	int longest = -1;
-	for (int index = 0; index < attr_name.size(); index++) {
-		if ((int)attr_record.name[use[index]].length() > longest)
-			longest = (int)attr_record.name[use[index]].length();
-	}
-	for (int index = 0; index < attr_name.size(); index++) {
-		int type = attr_record.type[use[index]];
-		if (type == -1) {
-			for (int i = 0; i < output_tuple.size(); i++) {
-				if (longest < getBits(output_tuple[i].getData()[use[index]].datai)) {
-					longest = getBits(output_tuple[i].getData()[use[index]].datai);
-				}
-			}
-		}
-		if (type == 0) {
-			for (int i = 0; i < output_tuple.size(); i++) {
-				if (longest < getBits(output_tuple[i].getData()[use[index]].dataf)) {
-					longest = getBits(output_tuple[i].getData()[use[index]].dataf);
-				}
-			}
-		}
-		if (type > 0) {
-			for (int i = 0; i < output_tuple.size(); i++) {
-				if (longest < output_tuple[i].getData()[use[index]].datas.length()) {
-					longest = (int)output_tuple[i].getData()[use[index]].datas.length();
-				}
-			}
-		}
-	}
-	longest += 1;
-	for (int index = 0; index < attr_name.size(); index++) {
-		if (index != attr_name.size() - 1) {
-			for (int i = 0; i < (longest - attr_record.name[use[index]].length()) / 2; i++)
-				printf(" ");
-			printf("%s", attr_record.name[use[index]].c_str());
-			for (int i = 0; i < longest - (longest - attr_record.name[use[index]].length()) / 2 - attr_record.name[use[index]].length(); i++)
-				printf(" ");
-			printf("|");
-		}
-		else {
-			for (int i = 0; i < (longest - attr_record.name[use[index]].length()) / 2; i++)
-				printf(" ");
-			printf("%s", attr_record.name[use[index]].c_str());
-			for (int i = 0; i < longest - (longest - attr_record.name[use[index]].length()) / 2 - attr_record.name[use[index]].length(); i++)
-				printf(" ");
-			printf("\n");
-		}
-	}
-	for (int index = 0; index < attr_name.size()*(longest + 1); index++) {
-		std::cout << "-";
-	}
-	std::cout << std::endl;
-	for (int index = 0; index < output_tuple.size(); index++) {
-		for (int i = 0; i < attr_name.size(); i++)
-		{
-			switch (output_tuple[index].getData()[use[i]].type) {
-			case -1:
-				if (i != attr_name.size() - 1) {
-					int len = output_tuple[index].getData()[use[i]].datai;
-					len = getBits(len);
-					for (int i = 0; i < (longest - len) / 2; i++)
-						printf(" ");
-					printf("%d", output_tuple[index].getData()[use[i]].datai);
-					for (int i = 0; i < longest - (longest - len) / 2 - len; i++)
-						printf(" ");
-					printf("|");
-				}
-				else {
-					int len = output_tuple[index].getData()[use[i]].datai;
-					len = getBits(len);
-					for (int i = 0; i < (longest - len) / 2; i++)
-						printf(" ");
-					printf("%d", output_tuple[index].getData()[use[i]].datai);
-					for (int i = 0; i < longest - (longest - len) / 2 - len; i++)
-						printf(" ");
-					printf("\n");
-				}
-				break;
-			case 0:
-				if (i != attr_name.size() - 1) {
-					float num = output_tuple[index].getData()[use[i]].dataf;
-					int len = getBits(num);
-					for (int i = 0; i < (longest - len) / 2; i++)
-						printf(" ");
-					printf("%.2f", output_tuple[index].getData()[use[i]].dataf);
-					for (int i = 0; i < longest - (longest - len) / 2 - len; i++)
-						printf(" ");
-					printf("|");
-				}
-				else {
-					float num = output_tuple[index].getData()[use[i]].dataf;
-					int len = getBits(num);
-					for (int i = 0; i < (longest - len) / 2; i++)
-						printf(" ");
-					printf("%.2f", output_tuple[index].getData()[use[i]].dataf);
-					for (int i = 0; i < longest - (longest - len) / 2 - len; i++)
-						printf(" ");
-					printf("\n");
-				}
-				break;
-			default:
-				std::string tmp = output_tuple[index].getData()[use[i]].datas;
-				if (i != attr_name.size() - 1) {
-					for (int i = 0; i < (longest - tmp.length()) / 2; i++)
-						printf(" ");
-					printf("%s", tmp.c_str());
-					for (int i = 0; i < longest - (longest - (int)tmp.length()) / 2 - (int)tmp.length(); i++)
-						printf(" ");
-					printf("|");
-				}
-				else {
-					std::string tmp = output_tuple[index].getData()[i].datas;
-					for (int i = 0; i < (longest - tmp.length()) / 2; i++)
-						printf(" ");
-					printf("%s", tmp.c_str());
-					for (int i = 0; i < longest - (longest - (int)tmp.length()) / 2 - (int)tmp.length(); i++)
-						printf(" ");
-					printf("\n");
-				}
-				break;
-			}
-		}
-	}*/
 }
 
 void Interpreter::EXEC_CREATE_TABLE() {
@@ -658,10 +493,13 @@ void Interpreter::EXEC_CREATE_TABLE() {
 	int check_index;
 	table_name = getWord(13, check_index);
 	//表的索引初始化
-	Index index_create;
-	index_create.num = 0;
+	Table table;
+	string table_filename = ".\\";
+	table_filename += table_name;
+	table_filename += ".dat";
+	table.tablename = table_name;
+	table.table_fileName = table_filename;
 	//设置属性
-	Attribute attr_create;
 	std::string attr_name;
 	int primary = -1;
 	int attr_num = 0;
@@ -684,7 +522,7 @@ void Interpreter::EXEC_CREATE_TABLE() {
 			std::string check_key = getWord(tmp_end + 1, tmp_end);
 			//再检查接下来的关键字是不是key，如果不是，则将primary看作属性名字
 			if (check_key != "key") {
-				attr_create.name[attr_num] = attr_name;
+				table.attr[attr_num].attr_name = attr_name;
 				break;
 			}
 			//设置属性的primary
@@ -692,11 +530,11 @@ void Interpreter::EXEC_CREATE_TABLE() {
 				check_index = tmp_end + 3;
 				std::string unique_name = getWord(check_index, check_index);
 				int hasset = 1;
-				for (int find_name = 0; find_name < attr_create.num; find_name++) {
-					if (attr_create.name[find_name] == unique_name) {
+				for (int find_name = 0; find_name < table.attr_num; find_name++) {
+					if (table.attr[find_name].attr_name == unique_name) {
 						hasset = 0;
 						primary = find_name;
-						attr_create.unique[find_name] = true;
+						table.attr[find_name].unique = true;
 						check_index += 2;
 						break;
 					}
@@ -708,36 +546,35 @@ void Interpreter::EXEC_CREATE_TABLE() {
 		}
 		//如果不是primary key，就直接把这个属性名字插入进去
 		else
-			attr_create.name[attr_num] = attr_name;
+			table.attr[attr_num].attr_name = attr_name;
 		check_index++;
 		//得到一个属性的类型
-		attr_create.type[attr_num] = getType(check_index, check_index);
-		attr_create.unique[attr_num] = false;
+		table.attr[attr_num].attr_type = getType(check_index, check_index);
+		table.attr[attr_num].unique = false;
 		//判断之后有没有unique关键词
 		if (query[check_index + 1] == 'u' || query[check_index + 1] == 'U') {
 			query = getLower(query, 0);
 			//如果有，则设为unique，如果开头为u，但是不为unique，那就是一个错误
 			if (getWord(check_index + 1, check_index) == "unique") {
-				attr_create.unique[attr_num] = true;
+				table.attr[attr_num].unique = true;
 			}
 			else
 				throw 1;
 		}
 		//更新属性的数量
 		attr_num++;
-		attr_create.num = attr_num;
+		table.attr_num = attr_num;
 	}
 	//调用CatalogManager，将表的信息插入进去
-	//API API;
-	//API.createTable(table_name, attr_create, primary, index_create);
-	std::cout << "create table success" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	API API;
+	API.createTable(table);
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
 
 
 void Interpreter::EXEC_DROP_TABLE() {
-	//API API;
+	API API;
 	std::string table_name;
 	int check_index;
 	//得到table的名字
@@ -745,7 +582,7 @@ void Interpreter::EXEC_DROP_TABLE() {
 	//如果table的名字之后有多余字符串，则是格式错误
 	if (query[check_index + 1] != '\0')
 		throw 1;//输入错误
-	//API.dropTable(table_name);
+	API.dropTable(table_name);
 	std::cout << "drop table success" << std::endl;
 	std::cout << ">>> SUCCESS" << std::endl;
 }

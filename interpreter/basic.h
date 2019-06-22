@@ -16,7 +16,7 @@ typedef enum {
 
 //一个struct存放它的一条信息的类型和值
 //用一个strunt嵌套一个union实现多种类型的转换
-//type的类型：-1：int,0:float,1-255:string(数值为字符串的长度+1),注意使用时对Value的选择！
+//type的类型：1：int,2:float,1-255:string(数值为字符串的长度+1),注意使用时对Value的选择！
 struct Data {
 	int type;
 	int datai;

@@ -125,13 +125,13 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 					return error;
 				}
 			}
-			if (att_data[i].type == 2) {
+			else if (att_data[i].type == 2) {
 				if (att_data[j].dataf == insert_att_data[j].dataf) {
 					error.info = "Primarykey or uniquekey conflicts";
 					return error;
 				}
 			}
-			if (att_data[i].type == 3) {
+			else {
 				if (att_data[j].datas == insert_att_data[j].datas) {
 					error.info = "Primarykey or uniquekey conflicts";
 					return error;
