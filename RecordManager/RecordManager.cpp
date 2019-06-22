@@ -245,7 +245,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, Where whe
 	//声明一个数组来记录该表所有的indexinfo
 	vector<IndexInfo> all_indexinfo;
 	iMgr.getAllIndex(all_indexinfo);
-	BYTE array[400] = "";
+	//BYTE array[400] = "";
 	int where_top = 0;
 	vector<Tuple_s> select_data;
 	//所有tuple逐个对比
