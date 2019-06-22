@@ -36,3 +36,6 @@ public:
 
 
 Error Insert_tuple(std::string table_name, Tuple_s insert_tuple);
+Error select_tuple(string table_name, vector<std::string> target_name, Where where_select);
+Error delete_tuple(string table_name, Where where_select);
+char* getword(int offset, int length, char *rawdata);
