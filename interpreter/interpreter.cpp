@@ -179,7 +179,6 @@ void Interpreter::EXEC_DROP_INDEX() {
 	if (query[check_index + 1] != '\0')
 		throw 1;//输入错误
 	API.dropIndex(table_name, index_name);
-	//std::cout << "drop index" << std::endl;
 	std::cout << "      > SUCCESS" << std::endl;
 }
 
