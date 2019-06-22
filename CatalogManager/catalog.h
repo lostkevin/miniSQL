@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include <sstream>
 #include <fstream>
 #include <vector>
 #include <map>
@@ -44,13 +44,14 @@ class Table {
 public:
 	//表名
 	string tablename;
+	//表对应的文件
+	string table_fileName;
 	//tuple属性
 	Attribute attr[Asize];
 	//属性数
 	uint attr_num;	
 	//索引数组,保存该表所有index信息
 	vector<index> IndexBasic;
-	string table_fileName;
 	Table () {
 	}
 	//从字符串中读取table信息

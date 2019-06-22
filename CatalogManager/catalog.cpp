@@ -40,6 +40,38 @@ Error CatalogManager::DropTable (string table_name)
 	return error;
 }
 
+CatalogManager::CatalogManager ()
+{
+	ifstream fs (".\\Catalog.dat");
+	if (fs) {
+		uint tableSize = 0;
+		fs.read ((char*)&tableSize, sizeof (uint));
+		for (uint i = 0; i < tableSize; i++) {
+			uint size = 0;
+			char * tmpData = new char[size] {0};
+			fs.getline (tmpData, size);
+			Table tmp = Table (string (tmpData));
+			DatabaseInfo[tmp.tablename] = tmp;
+			delete tmpData;
+		}
+
+	}
+}
+
+CatalogManager::~CatalogManager ()
+{
+	ofstream fs (".\\Catalog.dat");
+	uint tableSize = DatabaseInfo.size ();
+	fs.write ((char *)&tableSize, sizeof (uint));
+	for (auto iter = DatabaseInfo.begin (); iter != DatabaseInfo.end (); iter++) {
+		string tmp = iter->second.ToString ();
+		uint size = tmp.length () + sizeof (uint) + 20;
+		fs.write ((char *)&size, sizeof (uint));
+		fs.write (tmp.c_str (), tmp.length () + 1);
+	}
+	fs.close ();
+}
+
 Attribute & Table::getPrimaryKeyInfo ()
 {
 	uint i = 0;
@@ -49,6 +81,45 @@ Attribute & Table::getPrimaryKeyInfo ()
 		}
 	}
 	return attr[i];
+}
+
+Table::Table (string TableData)
+{
+	istringstream is(TableData);
+	is >> tablename >> table_fileName >> attr_num;
+	for (uint i = 0; i < attr_num; i++) {
+		is >> attr[i].attr_name >> attr[i].attr_type
+			>> attr[i].offset >> attr[i].primary >> attr[i].unique;
+	}
+	uint size = 0;
+	is >> size;
+	for (uint i = 0; i < size; i++) {
+		index tmp;
+		is >> tmp.index_file >> tmp.index_name >> tmp.index_type
+			>> tmp.keyID;
+		IndexBasic.push_back (tmp);
+	}
+}
+
+string Table::ToString ()
+{
+	//表名，表文件名，attr_num，attr, IndexNum, Index
+	ostringstream os;
+	os << tablename << " " << table_fileName << " " << attr_num << " ";
+	for (uint i = 0; i < attr_num; i++) {
+		os << attr[i].attr_name << " " << attr[i].attr_type << " "
+			<< attr[i].offset << " " << attr[i].primary << " "
+			<< attr[i].unique << " ";
+	}
+	os << IndexBasic.size () << " ";
+	for (uint i = 0; i < IndexBasic.size (); i++) {
+		os << IndexBasic[i].index_file << " "
+			<< IndexBasic[i].index_name << " "
+			<< IndexBasic[i].index_type << " "
+			<< IndexBasic[i].keyID << " ";
+	}
+	os << "\n";
+	return os.str();
 }
 
 bool Table::IsAttrExist (string attr_name)
