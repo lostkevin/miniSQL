@@ -194,6 +194,11 @@ Error CatalogManager::Dropindex (string index_name)
 	}
 	for (auto i = table->IndexBasic.begin(); i != table->IndexBasic.end(); i++) {
 		if (i->index_name == index_name) {
+			if (table->attr[i->keyID].primary) {
+				error.isError = true;
+				error.info = "primary index '" + index_name + "' could not be dropped";
+				return error;
+			}
 			remove (i->index_file.c_str ());
 			table->IndexBasic.erase (i);
 			break;

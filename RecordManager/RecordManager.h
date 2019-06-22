@@ -1,6 +1,6 @@
 #pragma once
 #include<sstream>
-#include"catalog.h"
+#include "../CatalogManager/catalog.h"
 #include "../interpreter/basic.h"
 #include"../IndexManager/IndexManager.h"
 
