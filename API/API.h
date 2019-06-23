@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "..\miniSQL\Commonheader.h"
+#include "../miniSQL/Commonheader.h"
 #include "../RecordManager/RecordManager.h"
 
 class API {
