@@ -174,6 +174,30 @@ void Interpreter::EXEC_CREATE_INDEX() {
 	std::cout << "      > SUCCESS" << std::endl;
 }
 
+void Interpreter::EXEC_FILE() {
+	int check_index = 0;
+	int start_index = 0;
+	std::string tmp_query;
+	std::string file_path = getWord(9, check_index);
+	if (query[check_index + 1] != '\0')
+		throw 1;
+	std::string::iterator it;
+	std::fstream fs(file_path);
+	std::stringstream ss;
+	ss << fs.rdbuf();
+	tmp_query = ss.str();
+	check_index = 0;
+	do {
+		while (tmp_query[check_index] != '\n')
+			check_index++;
+		query = tmp_query.substr(start_index, check_index - start_index);
+		check_index++;
+		start_index = check_index;
+		Normalize();
+		EXEC();
+	} while (tmp_query[check_index] != '\0');
+}
+
 void Interpreter::EXEC_DROP_INDEX() {
 	API API;
 	std::string table_name;
