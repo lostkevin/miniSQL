@@ -97,11 +97,11 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
 			temp.type = attr_info[j].attr_type;
 			//int
-			if (temp.type == 1) {
+			if (temp.type == 0) {
 				temp.datai = atoi(attr_rawdata);
 			}
 			//float
-			else if (temp.type == 2) {
+			else if (temp.type == 1) {
 				temp.dataf = atof(attr_rawdata);
 			}
 			//char
@@ -117,13 +117,17 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			if (!attr_info[j].primary && !attr_info[j].unique) {
 				continue;
 			}
-			if (att_data[i].type == 1) {
+			if (att_data[i].type == -1) {
+				error.info = "Primarykey cannot be null";
+				return error;
+			}
+			else if (att_data[i].type == 0) {
 				if (att_data[j].datai == insert_att_data[j].datai) {
 					error.info = "Primarykey or uniquekey conflicts";
 					return error;
 				}
 			}
-			else if (att_data[i].type == 2) {
+			else if (att_data[i].type == 1) {
 				if (att_data[j].dataf == insert_att_data[j].dataf) {
 					error.info = "Primarykey or uniquekey conflicts";
 					return error;
@@ -140,17 +144,29 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	}
 
 	//没有冲突，插入数据
-	IndexInfo tmp = bmgr.createBlock(filename, 400);
+	int blocksize = 0;
+	for (i = 0; i < attr_info.size(); i++) {
+		if (attr_info[i].attr_type == 0 || attr_info[i].attr_type == 1) {
+			blocksize += 4;
+		}
+		else {
+			blocksize += attr_info[i].attr_type;
+		}
+	}
+	IndexInfo tmp = bmgr.createBlock(filename, blocksize);
 	BYTE array[400] = "";
 	//每个attribute的数据插入
 	for (i = 0; i < attr_info.size(); i++) {
 		Data d = insert_att_data[i];
 		char attr_value[400];
 		string data;
-		if (d.type == 1) {
+		if (d.type == -1) {
+			data = "";
+		}
+		if (d.type == 0) {
 			data = std::to_string(d.datai);
 		}
-		if (d.type == 2) {
+		if (d.type == 1) {
 			data = Convert_ftos(d.dataf);
 		}
 		else {
@@ -160,15 +176,15 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 		strcat_s(array, attr_value);
 		//如果是primarykey，直接存index
 		if (attr_info[i].attr_name == primarykey_name) {
-			if (d.type == 1) {
+			if (d.type == 0) {
 				iMgr.insert(d.datai, tmp);
 				primary_valuei = d.datai;
 			}
-			if (d.type == 2) {
+			if (d.type == 1) {
 				iMgr.insert(d.dataf, tmp);
 				primary_valuef = d.dataf;
 			}
-			if (d.type == 3) {
+			else{
 				iMgr.insert(d.datas, tmp);
 				primary_values = d.datas;
 			}
@@ -183,14 +199,14 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 				continue;
 			}
 			IndexManager Finder(indexfilename, bmgr);
-			if (d.type == 1) {
-				iMgr.insert(d.datai, Finder.find(primary_valuei));
+			if (d.type == 0) {
+				Finder.insert(d.datai, iMgr.find(primary_valuei));
 			}
-			if (d.type == 2) {
-				iMgr.insert(d.dataf, Finder.find(primary_valuef));
+			else if (d.type == 1) {
+				Finder.insert(d.dataf, iMgr.find(primary_valuef));
 			}
-			if (d.type == 3) {
-				iMgr.insert(d.datas, Finder.find(primary_values));
+			else {
+				Finder.insert(d.datas, iMgr.find(primary_values));
 			}
 		}
 	}
@@ -285,11 +301,11 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
 			temp.type = attr_info[j].attr_type;
 			//int
-			if (temp.type == 1) {
+			if (temp.type == 0) {
 				temp.datai = atoi(attr_rawdata);
 			}
 			//float
-			else if (temp.type == 2) {
+			else if (temp.type == 1) {
 				temp.dataf = atof(attr_rawdata);
 			}
 			//char
@@ -607,11 +623,11 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
 			temp.type = attr_info[j].attr_type;
 			//int
-			if (temp.type == 1) {
+			if (temp.type == 0) {
 				temp.datai = atoi(attr_rawdata);
 			}
 			//float
-			else if (temp.type == 2) {
+			else if (temp.type == 1) {
 				temp.dataf = atof(attr_rawdata);
 			}
 			//char
@@ -625,7 +641,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 		for (j = 0; j < attr_info.size(); j++) {
 			//attribute名相同、且值相同
 			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
-				if (where_select[0].data.type == 1) {
+				if (where_select[0].data.type == 0) {
 					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
@@ -642,7 +658,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
 				}
-				if (where_select[0].data.type == 2) {
+				if (where_select[0].data.type == 1) {
 					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
@@ -659,7 +675,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}
 				}
-				if (where_select[0].data.type == 2) {
+				else {
 					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
 					}

@@ -339,9 +339,15 @@ void Interpreter::EXEC_INSERT() {
 		check_index += 3;
 		std::string value_insert = getWord(check_index, check_index);
 		Data insert_data;
+		if (value_insert == "") {
+			insert_data.type = -1;
+			tuple_insert.addData(insert_data);
+			num_of_insert++;
+			continue;
+		}
 		insert_data.type = attr_exist[num_of_insert].attr_type;
 		switch (attr_exist[num_of_insert].attr_type) {
-		case 1:
+		case 0:
 			try {
 				insert_data.datai = stringToNum<int>(value_insert);
 			}
@@ -349,7 +355,7 @@ void Interpreter::EXEC_INSERT() {
 				throw data_type_conflict();//转换失败
 			}
 			break;
-		case 2:
+		case 1:
 			try {
 				insert_data.dataf = stringToNum<float>(value_insert);
 			}
@@ -621,22 +627,21 @@ void Interpreter::EXEC_DROP_TABLE() {
 	if (query[check_index + 1] != '\0')
 		throw 1;//输入错误
 	API.dropTable(table_name);
-	std::cout << "drop table success" << std::endl;
-	std::cout << ">>> SUCCESS" << std::endl;
+	std::cout << "      > SUCCESS" << std::endl;
 }
 
 //得到一个位置的属性类型
 int Interpreter::getType(int pos, int &end_pos) {
 	std::string type = getWord(pos, end_pos);
 	if (type == "int")
-		return 1;
+		return 0;
 	else if (type == "float")
-		return 2;
+		return 1;
 	else if (type == "char") {
 		end_pos += 3;
 		std::string length = getWord(end_pos, end_pos);
 		end_pos += 2;
-		return atoi(length.c_str()) + 3;
+		return atoi(length.c_str()) + 1;
 	}
 	throw 1;
 }
