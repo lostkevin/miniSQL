@@ -101,5 +101,56 @@ void API::dropIndex (string index_name, string table_name = string())
 
 void API::eraseIndex (string table_name, Data primary_key)
 {
-
+	BufferManager bMgr;
+	CatalogManager cMgr;
+	vector<index> indexs;
+	vector<Attribute> attr_info;
+	cMgr.getIndex (table_name, indexs);
+	cMgr.getAttrInfo (table_name, attr_info);
+	IndexManager iMgr (bMgr);
+	for (uint i = 0; i < indexs.size (); i++) {
+		if (attr_info[indexs[i].keyID].primary) {
+			iMgr.open (indexs[i].index_file);
+			break;
+		}
+	}
+	IndexInfo tuple;
+	switch (primary_key.type) {
+	case -1:throw primary_key_null ();
+	case 0:tuple = iMgr.find (primary_key.datai); break;
+	case 1:tuple = iMgr.find (primary_key.dataf); break;
+	default:
+		tuple = iMgr.find (primary_key.datas); break;
+	}
+	char* rawdata = new BYTE[PAGE_SIZE];
+	bMgr.readRawData (cMgr.getDataFileName(table_name), tuple, rawdata);
+	//读取一个tuple的数据
+	vector<Data> att_data;
+	for (uint j = 0; j < attr_info.size (); j++) {
+		Data temp;
+		BYTE* ptr = rawdata + attr_info[j].offset;
+		temp.type = attr_info[j].attr_type;
+		if (temp.type == -1)throw exception ();
+		if (temp.type == 0) {
+			temp.datai = *(int*)ptr;
+		}
+		else if (temp.type == 1) {
+			temp.dataf = *(float*)ptr;
+		}
+		else {
+			temp.datas = ptr;
+		}
+		att_data.push_back (temp);
+	}
+	delete rawdata;
+	for (uint i = 0; i < indexs.size (); i++) {
+		iMgr.open (indexs[i].index_file);
+		switch (att_data[indexs[i].keyID].type) {
+		case 0:iMgr.erase (att_data[indexs[i].keyID].datai); break;
+		case 1:iMgr.erase (att_data[indexs[i].keyID].dataf); break;
+		default:
+			iMgr.erase (att_data[indexs[i].keyID].datas);
+		}
+		iMgr.close ();
+	}
 }
