@@ -256,12 +256,14 @@ public:
 			IndexInfo nullNode = GetNewNode ();
 			BPlusNode<_KTy>* tmp = GetNodePtr (nullNode);
 			//当分裂root时，向根插入的index保存在原根的max指针对应的key中
-			tmp->index[0].key = Root->index[Root->size].key;
+			tmp->index[0].key = Root->index[Root->size - 1].key;
 			//清空max指针的key
 			Root->index[Root->size].key = _KTy ();
 			//设置子节点索引
 			tmp->index[0].info = getRootInfo ();
 			tmp->index[1].info = Root->RIndex;
+			tmp->size = 2;
+			tmp->type = NONLEAF;
 			//设置父节点索引
 			Root->Parent = nullNode;
 			GetNodePtr (Root->RIndex)->Parent = nullNode;

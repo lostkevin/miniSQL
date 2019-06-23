@@ -321,7 +321,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			for (j = 0; j < attr_info.size (); j++) {
 				//attribute名相同、且值相同
 				if (where_select[0].attr_name == attr_info[j].attr_name) {
-					if (where_select[0].data.type == 1) {
+					if (where_select[0].data.type == 0) {
 						if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
@@ -393,7 +393,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							where_top++;
 						}
 					}
-					if (where_select[0].data.type == 2) {
+					if (where_select[0].data.type == 1) {
 						if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
@@ -465,7 +465,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							where_top++;
 						}
 					}
-					if (where_select[0].data.type == 2) {
+					if (where_select[0].data.type > 2) {
 						if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;

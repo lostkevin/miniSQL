@@ -40,7 +40,7 @@ std::vector<Data> Tuple_s::getData() const {
 void Tuple_s::showTuple(vector<Attribute>attr_info) {
 	for (int index = 0; index < getSize(); index++) {
 		if (data_[index].type == -1)throw exception ();
-		if (index > 0 && attr_info[index - 1].attr_name.length > 8) {
+		if (index > 0 && attr_info[index - 1].attr_name.length() > 8) {
 			std::cout << '\t';
 		}
 		if (data_[index].type == 0)
