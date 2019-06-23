@@ -572,6 +572,7 @@ void Interpreter::EXEC_CREATE_TABLE() {
 						hasset = 0;
 						primary = find_name;
 						table.attr[find_name].primary = true;
+						table.attr[find_name].unique = true;
 						check_index += 2;
 						break;
 					}
