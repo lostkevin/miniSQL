@@ -102,6 +102,7 @@ class Index {
 		}
 	}
 
+
 	//将info指向的node加入到活动节点列表，并返回一个指向这个node的指针
 	BPlusNode<_KTy>* GetNodePtr (const IndexInfo& info) {
 		if (!info._fileOffset)return nullptr;
@@ -297,6 +298,51 @@ public:
 
 };
 
+template<> const BPlusNode<string> Index<string>::ToNode (const BYTE (&rawData)[PAGE_SIZE]) {
+	BPlusNode<string> tmp = InitialNode ();
+	const BYTE* ptr = rawData;
+	tmp.Parent = *(IndexInfo*)ptr;
+	ptr += sizeof (IndexInfo);
+	tmp.LIndex = *(IndexInfo*)ptr;
+	ptr += sizeof (IndexInfo);
+	tmp.RIndex = *(IndexInfo*)ptr;
+	ptr += sizeof (IndexInfo);
+	uint PairSize = *(uint*)ptr;
+	ptr += sizeof (uint);
+	tmp.size = *(uint*)ptr;
+	ptr += sizeof (uint);
+	tmp.type = *(NodeType*)ptr;
+	ptr = rawData;
+	for (uint i = 0; i < tmp.size; i++) {
+		tmp.index[i].info = *(IndexInfo*)(ptr + 0x100 + i * PairSize);
+		tmp.index[i].key = (char *)(ptr + 0x100 + i * PairSize + sizeof(IndexInfo));
+	}
+	return tmp;
+}
+
+template<> void Index<string>::saveNode (const BPlusNode<string>& Node, BYTE (&rawData)[PAGE_SIZE]) {
+	getHeader ();
+	BYTE* ptr = rawData;
+	uint PairSize = sizeof (IndexInfo) + this->headerInfo.KeySize;
+	*(IndexInfo*)ptr = Node.Parent;
+	ptr += sizeof (IndexInfo);
+	*(IndexInfo*)ptr = Node.LIndex;
+	ptr += sizeof (IndexInfo);
+	*(IndexInfo*)ptr = Node.RIndex;
+	ptr += sizeof (IndexInfo);
+	*(uint*)ptr = PairSize;
+	ptr += sizeof (uint);
+	*(uint*)ptr = Node.size;
+	ptr += sizeof (uint);
+	*(NodeType*)ptr = Node.type;
+	ptr = rawData;
+	for (uint i = 0; i < Node.size; i++) {
+		*(IndexInfo*)(ptr + 0x100 + i * PairSize) = Node.index[i].info;
+		memcpy_s (ptr + 0x100 + i * PairSize + sizeof (IndexInfo), PairSize - sizeof (IndexInfo),
+					Node.index[i].key.c_str (), PairSize - sizeof (IndexInfo));
+	}
+}
+
 //保证每个node占用一个disk page，增加IO速度
 class IndexManager {
 private:
@@ -351,8 +397,6 @@ public:
 #endif // DEBUG
 
 };
-
-
 
 template<typename _KTy>
 inline const IndexInfo IndexManager::find (_KTy key)

@@ -31,16 +31,17 @@ std::vector<Data> Tuple_s::getData() const {
 	return this->data_;
 }
 
-ostream & operator << (ostream &out, const string &s)
-{
-	out << s;
-	return out;
-} //对<< 进行重载。
+//ostream & operator << (ostream &out, const string &s)
+//{
+//	out << s;
+//	return out;
+//} //对<< 进行重载。
 void Tuple_s::showTuple() {
 	for (int index = 0; index < getSize(); index++) {
-		if (data_[index].type == -1)
+		if (data_[index].type == -1)throw exception ();
+		if (data_[index].type == 0)
 			std::cout << data_[index].datai << '\t';
-		else if (data_[index].type == 0) {
+		else if (data_[index].type == 1) {
 			std::cout << data_[index].dataf << '\t';
 		}
 		else {

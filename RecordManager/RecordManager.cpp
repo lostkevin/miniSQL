@@ -232,10 +232,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	cmgr.getIndex(table_name, index_info);
 
 	BufferManager bmgr;
-	string filename = ".\\";
-	filename = filename + table_name;
-	filename = filename + ".dat";
-	cout << filename << endl;
+	string filename = cmgr.getDataFileName (table_name);
 	int i = 0, j = 0, k = 0;
 
 	//输出table attribute属性
@@ -278,6 +275,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	for (i = 0; i < index_info.size(); i++) {
 		if (index_name == index_info[i].index_name) {
 			primarykey = index_info[i];
+			break;
 		}
 	}
 	//初始化存主键的indexmanager
@@ -296,28 +294,23 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
-		int offset = 0;
 		for (j = 0; j < attr_info.size(); j++) {
 			Data temp;
-			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
+			BYTE* ptr = rawdata + attr_info[j].offset;
 			temp.type = attr_info[j].attr_type;
-			//int
+			if (temp.type == -1)throw exception ();
 			if (temp.type == 0) {
-				temp.datai = atoi(attr_rawdata);
+				temp.datai = *(int*)ptr;
 			}
-			//float
 			else if (temp.type == 1) {
-				temp.dataf = atof(attr_rawdata);
+				temp.dataf = *(float*)ptr;
 			}
-			//char
 			else {
-				temp.datas = attr_rawdata;
+				temp.datas = ptr;
 			}
-			att_data.push_back(temp);
-			delete attr_rawdata;
-			offset += attr_info[j].offset;
+			att_data.push_back (temp);
 		}
-		
+		delete rawdata;
 		for (j = 0; j < attr_info.size();j++) {
 			//attribute名相同、且值相同
 			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
@@ -549,6 +542,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 						continue;
 					}
 					tuple.addData(att_data[k]);
+					attr_top++;
 				}
 				select_data.push_back(tuple);
 			}
@@ -556,8 +550,6 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		for (i = 0; i < select_data.size(); i++) {
 			select_data[i].showTuple();
 		}
-		//std::cout << "No!\n";
-		delete rawdata;
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;

@@ -442,6 +442,7 @@ void Interpreter::EXEC_SELECT() {
 	else {
 		for (int index = 0; index < tmp_attr.size(); index++) {
 			attr_name.push_back(tmp_attr[index].attr_name);
+			target_name.push_back (tmp_attr[index].attr_name);
 		}
 	}
 	check_index++;
