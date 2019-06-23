@@ -25,7 +25,7 @@ void API::createTable (Table tableInfo)
 {
 	CatalogManager cMgr;
 	if (cMgr.CheckTableExist (tableInfo.tablename)) {
-		string tmp = "Table '" + tableInfo.tablename + "' already exists";
+		throw table_exist ();
 		return;
 	}
 	cMgr.CreateTable (tableInfo);

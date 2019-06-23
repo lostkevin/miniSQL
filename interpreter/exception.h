@@ -53,4 +53,5 @@ class unique_conflict :public std::exception {
 
 };
 
+class primary_index_drop_fail : public std::exception{};
 #endif 

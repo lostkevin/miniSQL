@@ -4,6 +4,8 @@
 #include <vector>
 #include <map>
 #include "..\miniSQL\Commonheader.h"
+#include "..\interpreter\exception.h"
+
 #define Asize 32
 using namespace std;
 

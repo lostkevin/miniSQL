@@ -11,8 +11,7 @@ bool CatalogManager::CheckAttrExist (string tablename, string attrname)
 void CatalogManager::CreateTable (Table newTable)
 {
 	if (getTableinfo (newTable.tablename)) {
-		string tmp = "Table '" + newTable.tablename + "' already exists";
-		throw new exception (tmp.c_str ());
+		throw table_exist ();
 	}
 	DatabaseInfo[newTable.tablename] = newTable;
 }
@@ -20,8 +19,7 @@ void CatalogManager::CreateTable (Table newTable)
 void CatalogManager::DropTable (string table_name)
 {
 	if (DatabaseInfo.find(table_name) == DatabaseInfo.end()) {
-		string tmp = "Unknown Table '" + table_name + "'";
-		throw new exception (tmp.c_str());
+		throw table_not_exist ();
 	}
 	DatabaseInfo.find (table_name)->second.release();
 	DatabaseInfo.erase (table_name);
@@ -148,16 +146,13 @@ void CatalogManager::CreateIndex (index index, string table_name)
 {
 	Table* tmp = getTableinfo (table_name);
 	if (!tmp) {
-		string tmp = "Table '" + table_name + "' doesn't exist";
-		throw new exception (tmp.c_str ());
+		throw table_not_exist ();
 	}
 	if (index.keyID >= tmp->attr_num) {
-		string tmp = "Key column doesn't exist in table";
-		throw new exception (tmp.c_str ());
+		throw attribute_not_exist ();
 	}
 	if (CheckIndexExist (index.index_name, table_name)) {
-		string tmp = "Duplicate key name '" + index.index_name + "'";
-		throw new exception (tmp.c_str ());
+		throw index_exist ();
 	}
 	tmp->IndexBasic.push_back (index);
 }
@@ -173,14 +168,12 @@ void CatalogManager::Dropindex (string index_name)
 		}
 	}
 	if (!table) {
-		string tmp = "index '" + index_name + "' not exist";
-		throw new exception (tmp.c_str ());
+		throw index_not_exist ();
 	}
 	for (auto i = table->IndexBasic.begin(); i != table->IndexBasic.end(); i++) {
 		if (i->index_name == index_name) {
 			if (table->attr[i->keyID].primary) {
-				string tmp = "primary index '" + index_name + "' could not be dropped";
-				throw new exception (tmp.c_str ());
+				throw primary_index_drop_fail ();
 			}
 			remove (i->index_file.c_str ());
 			table->IndexBasic.erase (i);
@@ -199,7 +192,7 @@ Table * CatalogManager::getTableinfo (string table_name)
 void CatalogManager::getAttrInfo (string table_name, vector<Attribute>& attributsInfo)
 {
 	Table* tmp = getTableinfo (table_name);
-	if (!tmp)throw new exception ("table not exist!");
+	if (!tmp)throw table_not_exist ();
 	for (uint i = 0; i < tmp->attr_num; i++) {
 		attributsInfo.push_back (tmp->attr[i]);
 	}
