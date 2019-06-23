@@ -20,8 +20,8 @@ bool IndexManager::fail ()
 
 bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 {
+	if (this->type != UNDEF || type == UNDEF)return false;
 	IndexInfo newPage = IOManager.NewPage ();
-	if(this->type != UNDEF || type == UNDEF)return false;
 	BYTE header[PAGE_SIZE] = { 0 };
 	BYTE* ptr = header;
 	*(uint*)ptr = PAGE_SIZE;
