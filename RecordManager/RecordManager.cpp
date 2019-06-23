@@ -34,7 +34,7 @@ string Convert_ftos(float Num)
 	插入一个tuple的函数，table_name插入的表名，insert_tuple插入的tuple
 	默认inset_tuple补足了值为null的属性，使insert_tuple与attr_info的属性对齐
 */
-Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
+void Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	CatalogManager cmgr;
 	Error error;					//返回错误信息
 	//Table* table;					//表的信息
@@ -51,10 +51,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	//检查是否有错误
 
 	BufferManager bmgr;
-	string filename = ".\\";
-	filename = filename + table_name;
-	filename = filename + ".dat";
-	cout << filename << endl;
+	string filename = cmgr.getDataFileName (table_name);
 	int i = 0, j = 0, k = 0;
 
 	string temp;
@@ -80,6 +77,19 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	}
 	//初始化存主键的indexmanager
 	IndexManager iMgr(primarykey.index_file, bmgr);
+	switch (primarykey.index_type) {
+	case 0:
+		iMgr.setIndexInfo (INT, sizeof (int));
+		break;
+	case 1:
+		iMgr.setIndexInfo (FLOAT, sizeof(float));
+		break;
+	default:
+		if (primarykey.index_type >= 2 && primarykey.index_type <= 256) {
+			iMgr.setIndexInfo (STRING, (uint)primarykey.index_type);
+		}
+		else throw exception ();
+	}
 
 	//声明一个数组来记录该表所有的indexinfo
 	vector<IndexInfo> all_indexinfo;
@@ -91,56 +101,52 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
-		int offset = 0;
 		for (j = 0; j < attr_info.size(); j++) {
 			Data temp;
-			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
+			BYTE* ptr = rawdata + attr_info[j].offset;
 			temp.type = attr_info[j].attr_type;
-			//int
+			if (temp.type == -1)throw exception();
 			if (temp.type == 0) {
-				temp.datai = atoi(attr_rawdata);
+				temp.datai = *(int*)ptr;
 			}
-			//float
 			else if (temp.type == 1) {
-				temp.dataf = atof(attr_rawdata);
+				temp.dataf = *(float*)ptr;
 			}
-			//char
 			else {
-				temp.datas = attr_rawdata;
+				temp.datas = ptr;
 			}
-			free (attr_rawdata);
 			att_data.push_back(temp);
-			offset += attr_info[j].offset;
 		}
+		delete rawdata;
+
 		//将该tuple与插入的数据对比，是否冲突
 		for (j = 0; j < attr_info.size(); j++) {
 			if (!attr_info[j].primary && !attr_info[j].unique) {
 				continue;
 			}
 			if (att_data[i].type == -1) {
-				error.info = "Primarykey cannot be null";
-				return error;
+				throw primary_key_null ();
 			}
 			else if (att_data[i].type == 0) {
 				if (att_data[j].datai == insert_att_data[j].datai) {
-					error.info = "Primarykey or uniquekey conflicts";
-					return error;
+					if (attr_info[j].primary)throw primary_key_conflict ();
+					throw unique_conflict ();
 				}
 			}
 			else if (att_data[i].type == 1) {
 				if (att_data[j].dataf == insert_att_data[j].dataf) {
-					error.info = "Primarykey or uniquekey conflicts";
-					return error;
+					if (attr_info[j].primary)throw primary_key_conflict ();
+					throw unique_conflict ();
 				}
 			}
 			else {
 				if (att_data[j].datas == insert_att_data[j].datas) {
-					error.info = "Primarykey or uniquekey conflicts";
-					return error;
+					if (attr_info[j].primary)throw primary_key_conflict ();
+					throw unique_conflict ();
 				}
 			}
 		}
-		free (rawdata);
+		delete rawdata;
 	}
 
 	//没有冲突，插入数据
@@ -154,26 +160,22 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 		}
 	}
 	IndexInfo tmp = bmgr.createBlock(filename, blocksize);
-	BYTE array[400] = "";
+	BYTE pData[PAGE_SIZE] = { 0 };
 	//每个attribute的数据插入
 	for (i = 0; i < attr_info.size(); i++) {
+		BYTE* ptr = pData + attr_info[i].offset;
 		Data d = insert_att_data[i];
-		char attr_value[400];
-		string data;
-		if (d.type == -1) {
-			data = "";
-		}
+		if (d.type == -1)continue;
 		if (d.type == 0) {
-			data = std::to_string(d.datai);
+			memcpy_s (ptr, sizeof (int), &d.datai, sizeof (int));
 		}
-		if (d.type == 1) {
-			data = Convert_ftos(d.dataf);
+		else if (d.type == 1) {
+			memcpy_s (ptr, sizeof (float), &d.dataf, sizeof (float));
 		}
-		else {
-			data = d.datas;
+		else{
+			memcpy_s (ptr, d.type, d.datas.c_str(), d.type);
 		}
-		strcpy_s(attr_value, data.c_str());
-		strcat_s(array, attr_value);
+
 		//如果是primarykey，直接存index
 		if (attr_info[i].attr_name == primarykey_name) {
 			if (d.type == 0) {
@@ -200,17 +202,17 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			}
 			IndexManager Finder(indexfilename, bmgr);
 			if (d.type == 0) {
-				Finder.insert(d.datai, iMgr.find(primary_valuei));
+				Finder.insert(d.datai, tmp);
 			}
 			else if (d.type == 1) {
-				Finder.insert(d.dataf, iMgr.find(primary_valuef));
+				Finder.insert(d.dataf, tmp);
 			}
 			else {
-				Finder.insert(d.datas, iMgr.find(primary_values));
+				Finder.insert(d.datas, tmp);
 			}
 		}
 	}
-	cout << array << endl;
+	bmgr.WriteRawData (filename, tmp, pData);
 	//std::cout << "No!\n";
 }
 
@@ -313,7 +315,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 				temp.datas = attr_rawdata;
 			}
 			att_data.push_back(temp);
-			free (attr_rawdata);
+			delete attr_rawdata;
 			offset += attr_info[j].offset;
 		}
 		
@@ -556,7 +558,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			select_data[i].showTuple();
 		}
 		//std::cout << "No!\n";
-		free (rawdata);
+		delete rawdata;
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;
@@ -635,7 +637,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 				temp.datas = attr_rawdata;
 			}
 			att_data.push_back(temp);
-			free (attr_rawdata);
+			delete attr_rawdata;
 			offset += attr_info[j].offset;
 		}
 		for (j = 0; j < attr_info.size(); j++) {
@@ -698,7 +700,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 				bmgr.erase(filename, all_indexinfo[i]);
 			}
 		}
-		free (rawdata);
+		delete rawdata;
 	}
 	error.isError = false;
 	error.info = "DELETE TUPLE SUCCESS!";

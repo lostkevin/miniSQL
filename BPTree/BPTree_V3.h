@@ -16,6 +16,17 @@ class Pair {
 public:
 	_KTy key;
 	IndexInfo info;
+
+	Pair () :key(), info(){
+	}
+
+	Pair (_KTy k, IndexInfo info) {
+		this->key = k;
+		this->info = info;
+	}
+
+	~Pair () {
+	}
 };
 template<typename _KTy> class Index;
 
@@ -56,7 +67,7 @@ public:
 	}
 
 	~BPlusNode () {
-		delete index;
+		delete [] index;
 	}
 
 	//查找拥有键值key的某节点
@@ -317,6 +328,7 @@ public:
 		this->outer = nullptr;
 		this->_order = 0;
 		this->IsDirty = false;
+		this->index = nullptr;
 	}
 
 	//深拷贝
@@ -324,7 +336,9 @@ public:
 		this->_order = rValue._order;
 		this->type = rValue.type;
 		this->index = new Pair[_order + 1];
-		memcpy_s (this->index, sizeof (Pair) * (_order + 1), rValue.index, sizeof (Pair) * (_order + 1));
+		for (uint i = 0; i <= _order; i++) {
+			this->index[i] = rValue.index[i];
+		}
 		this->LIndex = rValue.LIndex;
 		this->RIndex = rValue.RIndex;
 		this->Parent = rValue.Parent;

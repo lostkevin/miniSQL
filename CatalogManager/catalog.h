@@ -77,6 +77,8 @@ public:
 	bool getUniqueState (string attr_name, string table_name);
 	//获取keyID，理论上建立表时的输入顺序即为keyID，但为了防止遗忘，提供一个接口
 	int getKeyID (string attr_name, string table_name);
+	//获取数据文件
+	string getDataFileName (string table_name);
 	//在表上创建索引，失败返回错误信息
 	void CreateIndex (index index, string table_name);
 	//删除特定索引及其文件，失败返回错误信息

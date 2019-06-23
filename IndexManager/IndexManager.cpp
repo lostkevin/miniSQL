@@ -21,7 +21,6 @@ bool IndexManager::fail ()
 bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 {
 	IndexInfo newPage = IOManager.NewPage ();
-	IOManager.erase (newPage);
 	if(this->type != UNDEF || type == UNDEF)return false;
 	BYTE header[PAGE_SIZE] = { 0 };
 	BYTE* ptr = header;
@@ -29,6 +28,11 @@ bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 	ptr += 16;
 	//0x10-0x17 索引类型（int索引，float索引，string索引）
 	*(TreeTYPE*)ptr = this->type = type;
+	ptr += sizeof (TreeTYPE);
+	*(uint*)ptr = keySize;
+	ptr += sizeof (uint);
+	*(uint*)ptr = calcOrder (keySize);
+	IOManager.WriteRawData (IndexInfo (), header);
 	switch (type) {
 	case INT: {
 		ITree = new Index<int> (IOManager);
@@ -46,11 +50,6 @@ bool IndexManager::setIndexInfo (TreeTYPE type, uint keySize)
 		break;
 	}
 	}
-	ptr += sizeof (TreeTYPE);
-	*(uint*)ptr = keySize;
-	ptr += sizeof (uint);
-	*(uint*)ptr = calcOrder (keySize);
-	IOManager.WriteRawData (IndexInfo (), header);
 	return true;
 }
 
@@ -173,8 +172,6 @@ void IndexManager::getAllIndex (vector<IndexInfo>& result)
 	case INT:ITree->getAllIndex (result); return;
 	case FLOAT:FTree->getAllIndex (result); return;
 	case STRING:CTree->getAllIndex (result); return;
-	default:
-		throw new exception ("NullIndexException");
 	}
 }
 

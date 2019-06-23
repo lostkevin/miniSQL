@@ -231,3 +231,12 @@ int CatalogManager::getKeyID (string attr_name, string table_name)
 	}
 	return -1;
 }
+
+string CatalogManager::getDataFileName (string table_name)
+{
+	if (!CheckTableExist (table_name)) {
+		throw table_not_exist ();
+	}
+	Table* tmp = getTableinfo (table_name);
+	return tmp->table_fileName;
+}
