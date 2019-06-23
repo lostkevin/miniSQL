@@ -571,7 +571,7 @@ void Interpreter::EXEC_CREATE_TABLE() {
 					if (table.attr[find_name].attr_name == unique_name) {
 						hasset = 0;
 						primary = find_name;
-						table.attr[find_name].unique = true;
+						table.attr[find_name].primary = true;
 						check_index += 2;
 						break;
 					}
