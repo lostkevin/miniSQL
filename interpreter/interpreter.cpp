@@ -138,6 +138,9 @@ void Interpreter::EXEC() {
 	catch (unique_conflict error) {
 		std::cout << ">>> Error: unique conflict!" << std::endl;
 	}
+	catch (primary_index_drop_fail error) {
+		std::cout << ">>> Error: cant drop a primary key!" << std::endl;
+	}
 	catch (exit_command error) {
 		std::cout << ">>> Bye bye~" << std::endl;
 		exit(0);
