@@ -124,16 +124,16 @@ void Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			if (!attr_info[j].primary && !attr_info[j].unique) {
 				continue;
 			}
-			if (att_data[i].type == -1) {
+			if (att_data[j].type == -1) {
 				throw primary_key_null ();
 			}
-			else if (att_data[i].type == 0) {
+			else if (att_data[j].type == 0) {
 				if (att_data[j].datai == insert_att_data[j].datai) {
 					if (attr_info[j].primary)throw primary_key_conflict ();
 					throw unique_conflict ();
 				}
 			}
-			else if (att_data[i].type == 1) {
+			else if (att_data[j].type == 1) {
 				if (att_data[j].dataf == insert_att_data[j].dataf) {
 					if (attr_info[j].primary)throw primary_key_conflict ();
 					throw unique_conflict ();
@@ -146,7 +146,6 @@ void Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 				}
 			}
 		}
-		delete rawdata;
 	}
 
 	//没有冲突，插入数据

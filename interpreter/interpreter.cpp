@@ -277,7 +277,8 @@ void Interpreter::EXEC_DELETE() {
 			switch (where_delete.data.type) {
 			case 1:
 				try {
-					where_delete.data.datai = stringToNum<int>(value_delete);
+					string data = value_delete.substr (1, value_delete.length () - 2);
+					where_delete.data.datai = stringToNum<int>(data);
 				}
 				catch (...) {
 					throw data_type_conflict();//转换失败
@@ -285,7 +286,8 @@ void Interpreter::EXEC_DELETE() {
 				break;
 			case 2:
 				try {
-					where_delete.data.dataf = stringToNum<float>(value_delete);
+					string data = value_delete.substr (1, value_delete.length () - 2);
+					where_delete.data.datai = stringToNum<float> (data);
 				}
 				catch (...) {
 					throw data_type_conflict();//转换失败
@@ -349,7 +351,8 @@ void Interpreter::EXEC_INSERT() {
 		switch (attr_exist[num_of_insert].attr_type) {
 		case 0:
 			try {
-				insert_data.datai = stringToNum<int>(value_insert);
+				string data = value_insert.substr (1, value_insert.length () - 2);
+				insert_data.datai = stringToNum<int>(data);
 			}
 			catch (...) {
 				throw data_type_conflict();//转换失败
@@ -357,7 +360,8 @@ void Interpreter::EXEC_INSERT() {
 			break;
 		case 1:
 			try {
-				insert_data.dataf = stringToNum<float>(value_insert);
+				string data = value_insert.substr (1, value_insert.length () - 2);
+				insert_data.datai = stringToNum<float> (data);
 			}
 			catch (...) {
 				throw data_type_conflict();//转换失败
