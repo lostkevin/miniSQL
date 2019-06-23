@@ -435,10 +435,11 @@ void Interpreter::EXEC_SELECT() {
 	vector<Attribute> tmp_attr;
 	CM.getAttrInfo(table_name, tmp_attr);
 	if (!flag) {
-		//查找所有属性
+		//查找部分属性
 		for (int index = 0; index < attr_name.size(); index++) {
 			if (!CM.CheckAttrExist(table_name, attr_name[index]))
 				throw attribute_not_exist();
+			target_name.push_back(attr_name[index]);
 		}
 	}
 	else {
@@ -461,7 +462,7 @@ void Interpreter::EXEC_SELECT() {
 			tmp_target_name = getWord(check_index, check_index); //字段名
 			//if (!CM.hasAttribute(table_name, tmp_target_name))
 			//	throw attribute_not_exist();
-			target_name.push_back(tmp_target_name);
+			//target_name.push_back(tmp_target_name);
 			relation = getRelation(check_index + 1, check_index);
 			if (relation == "<")
 				tmp_where.relation_character = LESS;
