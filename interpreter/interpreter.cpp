@@ -148,6 +148,7 @@ void Interpreter::EXEC() {
 	catch (...) {
 		std::cout << ">>> Error: Input format error!" << std::endl;
 	}
+	query = string();
 }
 
 void Interpreter::EXEC_CREATE_INDEX() {
