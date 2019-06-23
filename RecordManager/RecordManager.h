@@ -3,6 +3,7 @@
 #include "../interpreter/basic.h"
 #include "../CatalogManager/catalog.h"
 #include"../IndexManager/IndexManager.h"
+#include "../API/api.h"
 
 class Tuple : public Table {
 public:

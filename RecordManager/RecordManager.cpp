@@ -2,7 +2,7 @@
 #include<stdio.h>
 //#include <cstring>
 #include "RecordManager.h"
-#include "..\API\API.h"
+
 
 string tostring(Tuple tuple) {
 
@@ -657,6 +657,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 	iMgr.getAllIndex(all_indexinfo);
 	BYTE array[400] = "";
 	int where_top = 0;
+	Data delete_primarykey;
 	vector<Tuple_s> select_data;
 	//所有tuple逐个对比
 	for (i = 0; i < all_indexinfo.size(); i++) {
@@ -679,6 +680,18 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 			else {
 				temp.datas = ptr;
 			}
+			if (attr_info[j].primary == true) {
+				delete_primarykey.type = temp.type;
+				if (temp.type == 0) {
+					delete_primarykey.datai = temp.datai;
+				}
+				else if (temp.type == 1) {
+					delete_primarykey.dataf = temp.dataf;
+				}
+				else {
+					delete_primarykey.datas = temp.datas;
+				}
+			}
 			att_data.push_back (temp);
 		}
 		delete rawdata;
@@ -689,52 +702,67 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 				if (where_select[0].data.type == 0) {
 					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 				}
 				if (where_select[0].data.type == 1) {
 					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 				}
 				else {
 					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 					else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
 						bmgr.erase(filename, all_indexinfo[i]);
+						api.eraseIndex(table_name, delete_primarykey);
 					}
 				}
 			}
