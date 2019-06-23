@@ -98,6 +98,7 @@ void Interpreter::EXEC() {
 		else {
 			throw input_format_error();
 		}
+		query = string();
 	}
 
 	catch (table_exist error) {
