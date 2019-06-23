@@ -545,7 +545,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		select_data.push_back (tuple);
 	}
 	for (i = 0; i < select_data.size (); i++) {
-		select_data[i].showTuple ();
+		select_data[i].showTuple (attr_info);
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;
