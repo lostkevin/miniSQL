@@ -110,6 +110,7 @@ Error Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 			}
 			free (attr_rawdata);
 			att_data.push_back(temp);
+			offset += attr_info[j].offset;
 		}
 		//将该tuple与插入的数据对比，是否冲突
 		for (j = 0; j < attr_info.size(); j++) {
