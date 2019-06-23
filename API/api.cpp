@@ -98,3 +98,8 @@ void API::dropIndex (string index_name, string table_name = string())
 	}
 	cMgr.Dropindex (index_name);
 }
+
+void API::eraseIndex (string table_name, Data primary_key)
+{
+
+}

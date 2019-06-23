@@ -2,6 +2,7 @@
 #include<stdio.h>
 //#include <cstring>
 #include "RecordManager.h"
+#include "..\API\API.h"
 
 string tostring(Tuple tuple) {
 
@@ -613,27 +614,24 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 		bmgr.readRawData(filename, all_indexinfo[i], rawdata);
 		//读取一个tuple的数据
 		vector<Data> att_data;
-		int offset = 0;
-		for (j = 0; j < attr_info.size(); j++) {
+		for (j = 0; j < attr_info.size (); j++) {
 			Data temp;
-			char *attr_rawdata = getword(offset, attr_info[j].offset, rawdata);
+			BYTE* ptr = rawdata + attr_info[j].offset;
 			temp.type = attr_info[j].attr_type;
-			//int
+			if (temp.type == -1)throw exception ();
 			if (temp.type == 0) {
-				temp.datai = atoi(attr_rawdata);
+				temp.datai = *(int*)ptr;
 			}
-			//float
 			else if (temp.type == 1) {
-				temp.dataf = atof(attr_rawdata);
+				temp.dataf = *(float*)ptr;
 			}
-			//char
 			else {
-				temp.datas = attr_rawdata;
+				temp.datas = ptr;
 			}
-			att_data.push_back(temp);
-			delete attr_rawdata;
-			offset += attr_info[j].offset;
+			att_data.push_back (temp);
 		}
+		delete rawdata;
+		API api;
 		for (j = 0; j < attr_info.size(); j++) {
 			//attribute名相同、且值相同
 			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
@@ -694,7 +692,6 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 				bmgr.erase(filename, all_indexinfo[i]);
 			}
 		}
-		delete rawdata;
 	}
 	error.isError = false;
 	error.info = "DELETE TUPLE SUCCESS!";
