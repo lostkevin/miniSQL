@@ -35,6 +35,19 @@ void API::createTable (Table tableInfo)
  		offset += tableInfo.attr[i].attr_type < 2 ? 4 : tableInfo.attr[i].attr_type;
 	}
 	cMgr.CreateTable (tableInfo);
+	//建立主索引
+	index primaryIndex;
+	primaryIndex.index_file = ".\\primary_" + tableInfo.tablename + ".index";
+	primaryIndex.index_name = "primary_" + tableInfo.tablename;
+	for (uint i = 0; i < tableInfo.attr_num; i++) {
+		if (tableInfo.attr[i].primary) {
+			primaryIndex.index_type = tableInfo.attr[i].attr_type;
+			primaryIndex.keyID = i;
+			cMgr.CreateIndex (primaryIndex, tableInfo.tablename);
+			return;
+		}
+	}
+
 }
 
 void API::dropTable (string table_name)
