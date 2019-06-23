@@ -598,14 +598,14 @@ void Interpreter::EXEC_DROP_TABLE() {
 int Interpreter::getType(int pos, int &end_pos) {
 	std::string type = getWord(pos, end_pos);
 	if (type == "int")
-		return -1;
+		return 1;
 	else if (type == "float")
-		return 0;
+		return 2;
 	else if (type == "char") {
 		end_pos += 3;
 		std::string length = getWord(end_pos, end_pos);
 		end_pos += 2;
-		return atoi(length.c_str()) + 1;
+		return atoi(length.c_str()) + 3;
 	}
 	throw 1;
 }
