@@ -696,81 +696,84 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 		}
 		delete rawdata;
 		API api;
-		for (j = 0; j < attr_info.size(); j++) {
-			//attribute名相同、且值相同
-			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
-				if (where_select[0].data.type == 0) {
-					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
+		if (where_select.size () == 0) {
+			bmgr.erase (filename, all_indexinfo[i]);
+		}
+		else {
+			for (j = 0; j < attr_info.size (); j++) {
+				//attribute名相同、且值相同
+				if (where_select[0].attr_name == attr_info[j].attr_name) {
+					if (where_select[0].data.type == 0) {
+						if (where_select[0].data.datai == att_data[j].datai&&where_select[0].relation_character == EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datai <= att_data[j].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == GREATER) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == LESS) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
 					}
-					else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
+					if (where_select[0].data.type == 1) {
+						if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == GREATER) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == LESS) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
 					}
-					else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
+					else {
+						if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == GREATER) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
+						else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == LESS) {
+							bmgr.erase (filename, all_indexinfo[i]);
+							api.eraseIndex (table_name, delete_primarykey);
+						}
 					}
-					else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
+					break;
 				}
-				if (where_select[0].data.type == 1) {
-					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-				}
-				else {
-					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-					else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
-						bmgr.erase(filename, all_indexinfo[i]);
-						api.eraseIndex(table_name, delete_primarykey);
-					}
-				}
-			}
-			//}
-			else if (where_select.size() == 0) {
-				bmgr.erase(filename, all_indexinfo[i]);
 			}
 		}
+
 	}
 	error.isError = false;
 	error.info = "DELETE TUPLE SUCCESS!";

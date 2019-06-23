@@ -275,7 +275,7 @@ void Interpreter::EXEC_DELETE() {
 			where_delete.data.type = tmp_attr[i].attr_type;
 			where_delete.attr_name = attr_name;
 			switch (where_delete.data.type) {
-			case 1:
+			case 0:
 				try {
 					//string data = value_delete.substr (1, value_delete.length () - 2);
 
@@ -285,7 +285,7 @@ void Interpreter::EXEC_DELETE() {
 					throw data_type_conflict();//转换失败
 				}
 				break;
-			case 2:
+			case 1:
 				try {
 					//string data = value_delete.substr (1, value_delete.length () - 2);
 					where_delete.data.dataf = stringToNum<float> (value_delete);
