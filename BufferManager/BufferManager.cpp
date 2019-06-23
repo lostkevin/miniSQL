@@ -242,7 +242,8 @@ void BufferManager::AddFreeNode (const string & fileName, uint offset)
 	Page* ptr = getPage (fileName, IndexInfo ());
 	if (ptr) {
 		Page* nextPage = getPage (fileName, IndexInfo (offset));
-		if (!nextPage)throw new exception ("Unknown Exception");
+		if (!nextPage)
+			throw new exception ("Unknown Exception");
 		bool lastState[2] = { ptr->PIN, nextPage->PIN };
 		nextPage->PIN = true;
 		ptr->PIN = true;

@@ -276,8 +276,9 @@ public:
 	bool erase (const _KTy &key) {
 		IndexInfo rootInfo = getRootInfo ();
 		BPlusNode<_KTy> *Root = GetNodePtr (rootInfo);
+
 		if (!Root)return false;
-		bool flag = Root->erase (key);
+		bool flag = Root->Search(key)->erase (key);
 		if (!flag)return false;
 		//删除后可能使root的size=1，此时释放原来的根节点并更新根的位置
 		if (Root->size == 1) {
@@ -288,6 +289,7 @@ public:
 			setRootInfo (IndexInfo ());
 			IOManager.erase (rootInfo);
 		}
+		update ();
 		return true;
 	}
 
@@ -434,7 +436,7 @@ template<>
 inline const IndexInfo IndexManager::find (string key)
 {
 	switch (type) {
-	case INT: {
+	case STRING: {
 		return CTree->find (key);
 	}
 	default:

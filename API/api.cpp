@@ -116,7 +116,8 @@ void API::eraseIndex (string table_name, Data primary_key)
 	}
 	IndexInfo tuple;
 	switch (primary_key.type) {
-	case -1:throw primary_key_null ();
+	case -1:
+		throw primary_key_null ();
 	case 0:tuple = iMgr.find (primary_key.datai); break;
 	case 1:tuple = iMgr.find (primary_key.dataf); break;
 	default:
@@ -130,7 +131,8 @@ void API::eraseIndex (string table_name, Data primary_key)
 		Data temp;
 		BYTE* ptr = rawdata + attr_info[j].offset;
 		temp.type = attr_info[j].attr_type;
-		if (temp.type == -1)throw exception ();
+		if (temp.type == -1)
+			throw exception ();
 		if (temp.type == 0) {
 			temp.datai = *(int*)ptr;
 		}

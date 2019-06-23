@@ -238,7 +238,7 @@ void Interpreter::EXEC_DELETE() {
 	if (query[check_index + 1] == '\0') {
 		attr_name = "";
 		vector<Where> tmp;
-		tmp.push_back (where_delete);
+		//tmp.push_back (where_delete);
 		API.deleteRecord (table_name, tmp);
 		std::cout << "      > SUCCESS" << std::endl;
 		return;
@@ -311,7 +311,6 @@ void Interpreter::EXEC_DELETE() {
 	vector<Where> tmp;
 	tmp.push_back (where_delete);
 	API.deleteRecord(table_name, tmp);
-	std::cout << "      > SUCCESS" << std::endl;
 }
 
 void Interpreter::EXEC_INSERT() {

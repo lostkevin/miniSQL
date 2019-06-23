@@ -283,11 +283,11 @@ public:
 				else if (RNode && RNode->Parent == this->Parent) {
 					uint i = 0;
 					NodePtr parentPtr = outer->GetNodePtr (this->Parent);
-					for (; parentPtr->index[i].info != this->LIndex; i++);
-					nextKey = parentPtr->index[i].key;
+					for (; parentPtr->index[i].info != this->RIndex; i++);
+					nextKey = parentPtr->index[i - 1].key;
 					//与右节点合并
 					RNode->IsDirty = true;
-					for (int i = RNode->size; i >= 0; i--) RNode->index[i + this->size] = this->index[i];
+					for (int i = RNode->size; i >= 0; i--) RNode->index[i + this->size] = RNode->index[i];
 					for (uint i = 0; i < this->size; i++) {
 						RNode->index[i] = this->index[i];
 						if (this->type == NONLEAF) {
@@ -304,7 +304,8 @@ public:
 				}
 				else {
 					//都不可以合并，说明该节点的父亲节点若存在，仅有一个儿子，这种情况仅出现在该节点为根
-					if (outer->GetNodePtr(this->Parent))throw new std::exception ("This node is not a root!");
+					if (outer->GetNodePtr(this->Parent))
+						//throw new std::exception ("This node is not a root!");
 					//根的修改需要交给外部完成，若this->size!=0,外部不需要做任何操作,否则释放内存并初始化root=nullptr
 					return true;
 				}
