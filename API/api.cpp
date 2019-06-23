@@ -28,6 +28,12 @@ void API::createTable (Table tableInfo)
 		throw table_exist ();
 		return;
 	}
+	uint offset = 0;
+	for (uint i = 0; i < tableInfo.attr_num; i++) {
+		tableInfo.attr[i].offset = offset;
+		//0, 1->4 | 2 -> 2 |  3 -> 3
+ 		offset += tableInfo.attr[i].attr_type < 2 ? 4 : tableInfo.attr[i].attr_type;
+	}
 	cMgr.CreateTable (tableInfo);
 }
 
