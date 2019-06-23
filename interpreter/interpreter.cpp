@@ -486,7 +486,7 @@ void Interpreter::EXEC_SELECT() {
 					tmp_where.data.type = tmp_attr[i].attr_type;
 					tmp_where.attr_name = tmp_attr[i].attr_name;
 					switch (tmp_where.data.type) {
-					case 1:
+					case 0:
 						try {
 							tmp_where.data.datai = stringToNum<int>(tmp_value);
 						}
@@ -494,7 +494,7 @@ void Interpreter::EXEC_SELECT() {
 							throw data_type_conflict();//转换失败
 						}
 						break;
-					case 2:
+					case 1:
 						try {
 							tmp_where.data.dataf = stringToNum<float>(tmp_value);
 						}
