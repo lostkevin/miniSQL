@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include<stdio.h>
 //#include <cstring>
 #include "RecordManager.h"
 
@@ -239,6 +240,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	for (i = 0; i < attr_info.size(); i++) {
 		for (j = top; j < target_name.size(); j++) {
 			if (attr_info[i].attr_name == target_name[j]) {
+				//cout << target_name[j] << endl;
 				if (top == j) {
 					top++; 
 					continue;
@@ -253,6 +255,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	//存在target不属于attribute中
 	if (i == attr_info.size() && top < target_name.size()) {
 		error.info = "ERROR:wrong attribute list!";
+		cout << error.info << endl;
 		return error;
 	}
 	string temp;
@@ -282,6 +285,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	int where_top = 0;
 	vector<Tuple_s> select_data;
 	//所有tuple逐个对比
+	
 	for (i = 0; i < all_indexinfo.size(); i++) {
 		//逐个读取rawdata
 		char* rawdata = new BYTE[PAGE_SIZE]{ 0 };
@@ -306,7 +310,8 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		}
 		delete rawdata;
 		Tuple_s tuple;
-		if (where_select.size () == 0) {
+		if (where_select.size() == 0) {
+			
 			int k, attr_top = 0;
 			//增加select的属性的值到输出的数组中
 			for (k = 0; k < att_data.size (); k++) {
@@ -316,8 +321,10 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 				tuple.addData (att_data[k]);
 				attr_top++;
 			}
+			select_data.push_back(tuple);
 		}
 		else {
+			//cout << where_select[0].attr_name << " " << attr_info[j].attr_name << endl;
 			for (j = 0; j < attr_info.size (); j++) {
 				//attribute名相同、且值相同
 				if (where_select[0].attr_name == attr_info[j].attr_name) {
@@ -393,7 +400,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							where_top++;
 						}
 					}
-					if (where_select[0].data.type == 1) {
+					else if (where_select[0].data.type == 1) {
 						if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
@@ -465,7 +472,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							where_top++;
 						}
 					}
-					if (where_select[0].data.type > 2) {
+					else {
 						if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
@@ -541,11 +548,11 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			}
 			
 		}
-
-		select_data.push_back (tuple);
+		
+		//
 	}
 	for (i = 0; i < select_data.size (); i++) {
-		select_data[i].showTuple ();
+		select_data[i].showTuple (attr_info);
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;
@@ -571,7 +578,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 	string filename = ".\\";
 	filename = filename + table_name;
 	filename = filename + ".dat";
-	cout << filename << endl;
+	//cout << filename << endl;
 	int i = 0, j = 0, k = 0;
 
 	string temp;

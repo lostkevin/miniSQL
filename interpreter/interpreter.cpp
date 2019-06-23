@@ -435,10 +435,11 @@ void Interpreter::EXEC_SELECT() {
 	vector<Attribute> tmp_attr;
 	CM.getAttrInfo(table_name, tmp_attr);
 	if (!flag) {
-		//查找所有属性
+		//查找部分属性
 		for (int index = 0; index < attr_name.size(); index++) {
 			if (!CM.CheckAttrExist(table_name, attr_name[index]))
 				throw attribute_not_exist();
+			target_name.push_back(attr_name[index]);
 		}
 	}
 	else {
