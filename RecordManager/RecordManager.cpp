@@ -298,6 +298,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			}
 			att_data.push_back(temp);
 			free (attr_rawdata);
+			offset += attr_info[j].offset;
 		}
 		
 		for (j = 0; j < attr_info.size();j++) {
@@ -619,6 +620,7 @@ Error delete_tuple(string table_name, vector<Where> where_select) {
 			}
 			att_data.push_back(temp);
 			free (attr_rawdata);
+			offset += attr_info[j].offset;
 		}
 		for (j = 0; j < attr_info.size(); j++) {
 			//attribute名相同、且值相同

@@ -6,10 +6,17 @@ Interpreter::Interpreter() {
 //将query进行赋值
 void Interpreter::getQuery() {
 	std::string tmp;
-	std::cout << "mysql > ";
+	bool flag = true;
+	//std::cout << "mysql > ";
 	//得到一行的所有字符，当最后一个字符为分号时结束
 	do {
-		std::cout << "      > ";
+		if (flag) {
+			std::cout << "mysql > ";
+			flag = false;
+		}
+		else {
+			std::cout << "      > ";
+		}
 		getline(std::cin, tmp);
 		query += tmp;
 		query += ' ';
@@ -172,11 +179,6 @@ void Interpreter::EXEC_DROP_INDEX() {
 	index_name = getWord(11, check_index);
 	check_index++;
 	//格式错误的情况
-	if (getLower(query, check_index).substr(check_index, 2) != "on")
-		throw 1;//格式错误
-	//得到table的名字
-	table_name = getWord(check_index + 3, check_index);
-	//如果table的名字之后有多余字符串，则是格式错误
 	if (query[check_index + 1] != '\0')
 		throw 1;//输入错误
 	API.dropIndex(table_name, index_name);
