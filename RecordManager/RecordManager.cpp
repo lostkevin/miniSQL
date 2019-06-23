@@ -331,7 +331,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 				//attribute名相同、且值相同
 				if (where_select[0].attr_name == attr_info[j].attr_name) {
 					if (where_select[0].data.type == 0) {
-						if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
+						if (where_select[0].data.datai == att_data[j].datai&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -348,7 +348,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+						else if (where_select[0].data.datai >= att_data[j].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -365,7 +365,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
+						else if (where_select[0].data.datai <= att_data[j].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -382,7 +382,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
+						else if (where_select[0].data.datai > att_data[j].datai&&where_select[0].relation_character == GREATER) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -399,7 +399,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
+						else if (where_select[0].data.datai < att_data[j].datai&&where_select[0].relation_character == LESS) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -418,7 +418,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 						}
 					}
 					else if (where_select[0].data.type == 1) {
-						if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
+						if (where_select[0].data.dataf == att_data[j].datai&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -435,7 +435,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+						else if (where_select[0].data.dataf >= att_data[j].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -452,7 +452,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
+						else if (where_select[0].data.dataf <= att_data[j].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -469,7 +469,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
+						else if (where_select[0].data.dataf > att_data[j].dataf&&where_select[0].relation_character == GREATER) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -486,7 +486,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
+						else if (where_select[0].data.dataf < att_data[j].dataf&&where_select[0].relation_character == LESS) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -505,7 +505,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 						}
 					}
 					else {
-						if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
+						if (where_select[0].data.datas == att_data[j].datas&&where_select[0].relation_character == EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -522,7 +522,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+						else if (where_select[0].data.datas >= att_data[j].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -539,7 +539,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
+						else if (where_select[0].data.datas <= att_data[j].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -556,7 +556,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
+						else if (where_select[0].data.datas > att_data[j].datas&&where_select[0].relation_character == GREATER) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
@@ -573,7 +573,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							select_data.push_back (tuple);
 							where_top++;
 						}
-						else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
+						else if (where_select[0].data.datas < att_data[j].datas&&where_select[0].relation_character == LESS) {
 							Tuple_s tuple;
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
