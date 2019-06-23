@@ -231,14 +231,12 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	string filename = cmgr.getDataFileName (table_name);
 	int i = 0, j = 0, k = 0;
 
-	//输出table attribute属性
-	for (int i = 0; i < attr_info.size(); i++) {
-		std::cout << attr_info[i].attr_name << '\t';
-	}
-	std::cout << std::endl;
+	
 	//对target排序
 	int top = 0;
+	
 	for (i = 0; i < attr_info.size(); i++) {
+		
 		for (j = top; j < target_name.size(); j++) {
 			if (attr_info[i].attr_name == target_name[j]) {
 				//cout << target_name[j] << endl;
@@ -286,7 +284,6 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	int where_top = 0;
 	vector<Tuple_s> select_data;
 	//所有tuple逐个对比
-	
 	for (i = 0; i < all_indexinfo.size(); i++) {
 		//逐个读取rawdata
 		char* rawdata = new BYTE[PAGE_SIZE]{ 0 };
@@ -316,6 +313,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			int k, attr_top = 0;
 			//增加select的属性的值到输出的数组中
 			for (k = 0; k < att_data.size (); k++) {
+				if (attr_top >= target_name.size()) {
+					break;
+				}
 				if (attr_info[k].attr_name != target_name[attr_top]) {
 					continue;
 				}
@@ -324,6 +324,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			}
 			select_data.push_back(tuple);
 		}
+		
 		else {
 			//cout << where_select[0].attr_name << " " << attr_info[j].attr_name << endl;
 			for (j = 0; j < attr_info.size (); j++) {
@@ -335,6 +336,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -349,6 +353,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -363,6 +370,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -377,6 +387,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -391,6 +404,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -407,6 +423,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -421,6 +440,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -435,6 +457,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -449,6 +474,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -463,6 +491,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -479,6 +510,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -493,6 +527,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -507,6 +544,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -521,6 +561,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -535,6 +578,9 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 							int k, attr_top = 0;
 							//增加select的属性的值到输出的数组中
 							for (k = 0; k < att_data.size (); k++) {
+								if (attr_top >= target_name.size()) {
+									break;
+								}
 								if (attr_info[k].attr_name != target_name[attr_top]) {
 									continue;
 								}
@@ -552,8 +598,13 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 		
 		//
 	}
+	//输出table attribute属性
+	for (int i = 0; i < target_name.size(); i++) {
+		std::cout << target_name[i] << '\t';
+	}
+	std::cout << std::endl;
 	for (i = 0; i < select_data.size (); i++) {
-		select_data[i].showTuple (attr_info);
+		select_data[i].showTuple (target_name);
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;

@@ -22,6 +22,7 @@ public:
 
 	void dropIndex(string table_name, string index_name);
 
+	void eraseIndex (string table_name, Data primary_key);
 private:
 	
 };

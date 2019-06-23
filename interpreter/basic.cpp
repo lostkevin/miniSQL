@@ -37,11 +37,11 @@ std::vector<Data> Tuple_s::getData() const {
 //	return out;
 //} //对<< 进行重载。
 
-void Tuple_s::showTuple(vector<Attribute>attr_info) {
-	for (int index = 0; index < getSize(); index++) {
+void Tuple_s::showTuple(vector<string>target_name) {
+	for (int index = 0; index < target_name.size(); index++) {
 		if (data_[index].type == -1)throw exception ();
 		//cout << attr_info[index - 1].attr_name.length() << " ";
-		if (index > 0 && attr_info[index - 1].attr_name.length() >= 8) {
+		if (index > 0 && target_name[index - 1].length() >= 8) {
 			std::cout << '\t';
 		}
 		if (data_[index].type == 0)
