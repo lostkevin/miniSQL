@@ -58,9 +58,6 @@ void Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 	//获取primarykey的名称，加入到index_name中，方便之后查找indexfilename
 	string index_name = "primary_";
 	string primarykey_name;
-	int primary_valuei;
-	float primary_valuef;
-	string primary_values;
 	for (i = 0; i < attr_info.size(); i++) {
 		if (attr_info[i].primary == true) {
 			index_name = index_name + attr_info[i].attr_name;
@@ -179,15 +176,12 @@ void Insert_tuple(std::string table_name, Tuple_s insert_tuple) {
 		if (attr_info[i].attr_name == primarykey_name) {
 			if (d.type == 0) {
 				iMgr.insert(d.datai, tmp);
-				primary_valuei = d.datai;
 			}
 			if (d.type == 1) {
 				iMgr.insert(d.dataf, tmp);
-				primary_valuef = d.dataf;
 			}
 			else{
 				iMgr.insert(d.datas, tmp);
-				primary_values = d.datas;
 			}
 		}
 		//对返回的索引，逐个更新,若该data需要插入index，则更新
@@ -311,245 +305,247 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 			att_data.push_back (temp);
 		}
 		delete rawdata;
-		for (j = 0; j < attr_info.size();j++) {
-			//attribute名相同、且值相同
-			if (where_select.size()>0&&where_select[0].attr_name.compare(attr_info[j].attr_name) == 0) {
-				if (where_select[0].data.type == 1) {
-					if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
+		Tuple_s tuple;
+		if (where_select.size () == 0) {
+			int k, attr_top = 0;
+			//增加select的属性的值到输出的数组中
+			for (k = 0; k < att_data.size (); k++) {
+				if (attr_info[k].attr_name != target_name[attr_top]) {
+					continue;
 				}
-				if (where_select[0].data.type == 2) {
-					if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+				tuple.addData (att_data[k]);
+				attr_top++;
+			}
+		}
+		else {
+			for (j = 0; j < attr_info.size (); j++) {
+				//attribute名相同、且值相同
+				if (where_select[0].attr_name == attr_info[j].attr_name) {
+					if (where_select[0].data.type == 1) {
+						if (where_select[0].data.datai == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
+						else if (where_select[0].data.datai >= att_data[i].datai&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.datai <= att_data[i].datai&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.datai > att_data[i].datai&&where_select[0].relation_character == GREATER) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.datai < att_data[i].datai&&where_select[0].relation_character == LESS) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
 					}
-					else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+					if (where_select[0].data.type == 2) {
+						if (where_select[0].data.dataf == att_data[i].datai&&where_select[0].relation_character == EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
+						else if (where_select[0].data.dataf >= att_data[i].dataf&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
+						else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
+							}
+							select_data.push_back (tuple);
+							where_top++;
+						}
 					}
-					else if (where_select[0].data.dataf <= att_data[i].dataf&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+					if (where_select[0].data.type == 2) {
+						if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.dataf > att_data[i].dataf&&where_select[0].relation_character == GREATER) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+						else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.dataf < att_data[i].dataf&&where_select[0].relation_character == LESS) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+						else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-				}
-				if (where_select[0].data.type == 2) {
-					if (where_select[0].data.datas == att_data[i].datas&&where_select[0].relation_character == EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+						else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datas >= att_data[i].datas&&where_select[0].relation_character == GREATER_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
+						else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
+							Tuple_s tuple;
+							int k, attr_top = 0;
+							//增加select的属性的值到输出的数组中
+							for (k = 0; k < att_data.size (); k++) {
+								if (attr_info[k].attr_name != target_name[attr_top]) {
+									continue;
+								}
+								tuple.addData (att_data[k]);
+								attr_top++;
 							}
-							tuple.addData(att_data[k]);
-							attr_top++;
+							select_data.push_back (tuple);
+							where_top++;
 						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datas <= att_data[i].datas&&where_select[0].relation_character == LESS_OR_EQUAL) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datas > att_data[i].datas&&where_select[0].relation_character == GREATER) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
-					}
-					else if (where_select[0].data.datas < att_data[i].datas&&where_select[0].relation_character == LESS) {
-						Tuple_s tuple;
-						int k, attr_top = 0;
-						//增加select的属性的值到输出的数组中
-						for (k = 0; k < att_data.size(); k++) {
-							if (attr_info[k].attr_name != target_name[attr_top]) {
-								continue;
-							}
-							tuple.addData(att_data[k]);
-							attr_top++;
-						}
-						select_data.push_back(tuple);
-						where_top++;
 					}
 				}
 			}
-			//}
-			//没有条件查询
-			else if (where_select.size() == 0) {
-				Tuple_s tuple;
-				int k, attr_top = 0;
-				//增加select的属性的值到输出的数组中
-				for (k = 0; k < att_data.size(); k++) {
-					if (attr_info[k].attr_name != target_name[attr_top]) {
-						continue;
-					}
-					tuple.addData(att_data[k]);
-					attr_top++;
-				}
-				select_data.push_back(tuple);
-			}
+			
 		}
-		for (i = 0; i < select_data.size(); i++) {
-			select_data[i].showTuple();
-		}
+
+		select_data.push_back (tuple);
+	}
+	for (i = 0; i < select_data.size (); i++) {
+		select_data[i].showTuple ();
 	}
 	//这个error甚至没有初始化 By Kevin
 	return error;
