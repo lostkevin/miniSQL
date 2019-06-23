@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "..\miniSQL\Commonheader.h"
+#include"../CatalogManager/catalog.h"
 
 //元组管理，数据只增不减
 class Tuple_s {
@@ -14,7 +15,8 @@ public:
 	int getSize();  //返回元组的数据数量
 	bool isDeleted();
 	void setDeleted();
-	void showTuple();  //显示元组中的所有数据
+	void showTuple(vector<Attribute>attr_info);  //显示元组中的所有数据
+	void showTuple();
 };
 
 class Table_s {

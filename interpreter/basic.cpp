@@ -36,9 +36,13 @@ std::vector<Data> Tuple_s::getData() const {
 //	out << s;
 //	return out;
 //} //对<< 进行重载。
-void Tuple_s::showTuple() {
+
+void Tuple_s::showTuple(vector<Attribute>attr_info) {
 	for (int index = 0; index < getSize(); index++) {
 		if (data_[index].type == -1)throw exception ();
+		if (index > 0 && attr_info[index - 1].attr_name.length > 8) {
+			std::cout << '\t';
+		}
 		if (data_[index].type == 0)
 			std::cout << data_[index].datai << '\t';
 		else if (data_[index].type == 1) {
@@ -48,6 +52,21 @@ void Tuple_s::showTuple() {
 			cout << data_[index].datas << '\t';
 		}
 			
+	}
+	std::cout << std::endl;
+}
+void Tuple_s::showTuple() {
+	for (int index = 0; index < getSize(); index++) {
+		if (data_[index].type == -1)throw exception();
+		if (data_[index].type == 0)
+			std::cout << data_[index].datai << '\t';
+		else if (data_[index].type == 1) {
+			std::cout << data_[index].dataf << '\t';
+		}
+		else {
+			cout << data_[index].datas << '\t';
+		}
+
 	}
 	std::cout << std::endl;
 }
