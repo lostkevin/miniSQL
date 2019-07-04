@@ -7,5 +7,6 @@ int main () {
 		interpreter.getQuery ();
 		interpreter.EXEC ();
 	}
+	system ("pause");
 	return 0;
 }

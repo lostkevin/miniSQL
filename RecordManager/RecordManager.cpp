@@ -279,7 +279,21 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 
 	//声明一个数组来记录该表所有的indexinfo
 	vector<IndexInfo> all_indexinfo;
-	iMgr.getAllIndex(all_indexinfo);
+	
+	if (where_select[0].relation_character == EQUAL) {
+		if (where_select[0].data.type == 0) {
+			iMgr.find (where_select[0].data.datai);
+		}
+		else if (where_select[0].data.type == 1) {
+			iMgr.find (where_select[0].data.dataf);
+		}
+		else {
+			iMgr.find (where_select[0].data.datas);
+		}
+	}
+	else {
+		iMgr.getAllIndex (all_indexinfo);
+	}
 	
 	int where_top = 0;
 	vector<Tuple_s> select_data;
