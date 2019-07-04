@@ -1,0 +1,16 @@
+create table zju ( autocode int unique, sno char(10), sname char(16),  sage int, sgender char(1), primary key ( sno ));
+select * from zju;
+insert into zju values ( 0 ,'3170103' ,'hkw' , 20 , '1' );
+insert into zju values ( 1 ,'31703' ,'sk' , 20 , '1' );
+insert into zju values ( 2 ,'31710' ,'zcc' , 20 , '1' );
+select * from zju;
+drop table zju;
+select * from zju;
+create table zju ( autocode int unique, sno char(10), sname char(16),  sage int, sgender char(1), primary key ( sno ));
+create index test on zju ( autocode );
+insert into zju values ( 0 ,'3170103' ,'hkw' , 20 , '1' );
+insert into zju values ( 1 ,'31703' ,'sk' , 20 , '1' );
+insert into zju values ( 2 ,'31710' ,'zcc' , 20 , '1' );
+select * from zju;
+drop table zju;
+exit;

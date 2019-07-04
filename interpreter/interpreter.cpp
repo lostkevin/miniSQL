@@ -159,10 +159,11 @@ void Interpreter::EXEC_FILE() {
 	int start_index = 0;
 	std::string tmp_query;
 	std::string file_path = getWord(9, check_index);
+	file_path = "..\\" + file_path + ".txt";
 	if (query[check_index + 1] != '\0')
 		throw 1;
 	std::string::iterator it;
-	std::fstream fs(file_path);
+	std::ifstream fs(file_path);
 	std::stringstream ss;
 	ss << fs.rdbuf();
 	tmp_query = ss.str();
