@@ -280,7 +280,7 @@ Error select_tuple(string table_name, vector<std::string> target_name, vector<Wh
 	//声明一个数组来记录该表所有的indexinfo
 	vector<IndexInfo> all_indexinfo;
 	
-	if (where_select[0].relation_character == EQUAL) {
+	if (where_select.size() > 0 && where_select[0].relation_character == EQUAL) {
 		if (where_select[0].data.type == 0) {
 			iMgr.find (where_select[0].data.datai);
 		}
