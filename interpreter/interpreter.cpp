@@ -174,6 +174,8 @@ void Interpreter::EXEC_FILE() {
 		query = tmp_query.substr(start_index, check_index - start_index);
 		check_index++;
 		start_index = check_index;
+		query += ' ';
+		query[query.length() - 2] = '\0';
 		Normalize();
 		EXEC();
 	} while (tmp_query[check_index] != '\0');
