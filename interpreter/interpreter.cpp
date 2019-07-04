@@ -101,6 +101,9 @@ void Interpreter::EXEC() {
 		else if (query.substr(0, 4) == "exit"&&query[5] == '\0') {
 			EXEC_EXIT();
 		}
+		else if (query.substr(0, 8) == "execfile") {
+			EXEC_FILE();
+		}
 		//如果所有指令都不能对应，则抛出输入格式错误
 		else {
 			throw input_format_error();
@@ -151,29 +154,6 @@ void Interpreter::EXEC() {
 	query = string();
 }
 
-void Interpreter::EXEC_CREATE_INDEX() {
-	CatalogManager CM;
-	API API;
-	std::string index_name;
-	std::string table_name;
-	std::string attr_name;
-	int check_index;
-	index_name = getWord(13, check_index);
-	check_index++;
-	if (getLower(query, check_index).substr(check_index, 2) != "on")
-		throw 1;//格式错误
-	table_name = getWord(check_index + 3, check_index);
-	if (!CM.CheckTableExist(table_name))
-		throw table_not_exist();//table not exist
-	if (query[check_index + 1] != '(')
-		throw 1;//格式错误
-	attr_name = getWord(check_index + 3, check_index);
-	if (query[check_index + 1] != ')' || query[check_index + 3] != '\0')
-		throw 1;//格式错误
-	API.createIndex(table_name, index_name, attr_name);
-	std::cout << "      > SUCCESS" << std::endl;
-}
-
 void Interpreter::EXEC_FILE() {
 	int check_index = 0;
 	int start_index = 0;
@@ -197,6 +177,31 @@ void Interpreter::EXEC_FILE() {
 		EXEC();
 	} while (tmp_query[check_index] != '\0');
 }
+
+void Interpreter::EXEC_CREATE_INDEX() {
+	CatalogManager CM;
+	API API;
+	std::string index_name;
+	std::string table_name;
+	std::string attr_name;
+	int check_index;
+	index_name = getWord(13, check_index);
+	check_index++;
+	if (getLower(query, check_index).substr(check_index, 2) != "on")
+		throw 1;//格式错误
+	table_name = getWord(check_index + 3, check_index);
+	if (!CM.CheckTableExist(table_name))
+		throw table_not_exist();//table not exist
+	if (query[check_index + 1] != '(')
+		throw 1;//格式错误
+	attr_name = getWord(check_index + 3, check_index);
+	if (query[check_index + 1] != ')' || query[check_index + 3] != '\0')
+		throw 1;//格式错误
+	API.createIndex(table_name, index_name, attr_name);
+	std::cout << "      > SUCCESS" << std::endl;
+}
+
+
 
 void Interpreter::EXEC_DROP_INDEX() {
 	API API;
